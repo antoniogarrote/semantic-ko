@@ -13,6 +13,8 @@ ko.jsonExpressionRewriting = (function () {
     function isWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
+        if(expression[0]=="<" && expression[expression.length-1]==">")
+            return true;
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
@@ -93,10 +95,50 @@ ko.jsonExpressionRewriting = (function () {
             }
 
             return jsonString;
+        },
+
+        insertPropertyReaderWritersIntoJson: function (jsonString) {
+            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
+            var propertyAccessorTokens = [];
+            var readers = "";
+            var isFirst = true;
+            for (var key in parsed) {
+                var value = parsed[key];
+                if (isWriteableValue(value)) {
+                    if (propertyAccessorTokens.length > 0)
+                        propertyAccessorTokens.push(", ");
+                    if(value[0]==="<" && value[value.length-1]===">") {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { __SKO__sc['" + value.slice(1,value.length-1) + "'] = __ko_value; }");
+                    } else {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+                    }
+                }
+                if(!isFirst)  {
+                    readers = readers+", ";
+                } else {
+                    isFirst = false;
+                }
+                if(value[0]==='<' && value[value.length-1]==='>') {
+                    readers = readers+key+": __SKO__sc['"+value.slice(1,value.length-1)+"']";
+                } else {
+                    readers = readers+key+": "+value;
+                }
+            }
+
+            jsonString = readers;
+
+            if (propertyAccessorTokens.length > 0) {
+                var allPropertyAccessors = propertyAccessorTokens.join("");
+                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            }
+
+            return jsonString;
         }
+
     };
 })();
 
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
 ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson', ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson);

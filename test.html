@@ -1,0 +1,63 @@
+<html>
+<head>
+  <title>test semantic knockout.js</title>
+  <script type='text/javascript' src="./build/output/knockout-latest.debug.js"></script>
+  <script type='text/javascript' src="./deps/rdf_store.js"></script>
+  <script type='text/javascript' src="./deps/sem_ko.js"></script>
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+</head>
+<body>
+
+  <script type='text/javascript'>
+    $(document).ready(function(){
+      /*
+       * var model = { '<http://test.com/something>': ko.observable('hi') };
+       * var model = { 'testHello': ko.observable('hi') };
+       * window['testModel'] = model;
+       * ko.applyBindings(model)
+       */
+
+        var testData = "INSERT DATA { <http://test.com/a> <http://test.com/title> 'test resource' ; <http://test.com/count> '1'^^<http://www.w3.org/2001/XMLSchema#int> }";
+
+        var test = function() {
+            window['testStore'] = function() {
+                sko.store.execute("select * { ?s ?p ?o }",function(success, results){
+                    for(var i=0; i<results.length; i++) {
+                        var bindings = results[i];
+                        console.log(bindings.s.value+ " "+ bindings.p.value + " " + bindings.o.value + " . ");
+                    }
+                });
+            };
+
+            sko.store.node("http://test.com/a", function(success,resource) {
+                var res = new sko.Resource(resource);
+                console.log("*** RESOURCE BUILT");
+                window['testModel'] = res;
+                console.log("*** APPLYING BINDINGS");
+                ko.applyBindings(res)
+            });
+
+            window['updateTitle'] = function(title) {
+                testModel["http://test.com/title"](title)
+            };
+
+            window['updateTitleStore'] = function(title) {
+                sko.store.execute("DELETE { <http://test.com/a> <http://test.com/title> ?title } INSERT { <http://test.com/a> <http://test.com/title> \""+title+"\" } WHERE { <http://test.com/a> <http://test.com/title> ?title }", function(){});
+            };
+        };
+
+        sko.init(function(){
+            sko.store.execute(testData,
+                              function(result, msg){
+                                  test();
+                              });
+        });
+
+    });
+  </script>
+
+  <p id='theTestP' data-bind="text: <http://test.com/title>"></p>
+  <!-- <p data-bind="text: testHello"></p> -->
+
+</body>
+</html>

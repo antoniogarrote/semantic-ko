@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -179,7 +179,9 @@ ko.utils = new (function () {
                 
             // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
             // the variable name "expression" itself will clash with a subproperty called "expression"
-            return (new Function("sc", "with(sc) { return (" + expression + ") }"))(scope);
+            // The model must available in the chain scope for arbritrary JS code to execute, but it 
+            // also must be reference by <> and [] URIs anc CURIES
+            return (new Function("__SKO__sc", "with(__SKO__sc){ return (" + expression + ") }"))(scope);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
@@ -403,6 +405,7 @@ if (!Function.prototype['bind']) {
         }; 
     };
 }
+
 ko.utils.domData = new (function () {
     var uniqueId = 0;
     var dataStoreKeyExpandoPropertyName = "__ko__" + (new Date).getTime();
@@ -1126,6 +1129,8 @@ ko.jsonExpressionRewriting = (function () {
     function isWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
+        if(expression[0]=="<" && expression[expression.length-1]==">")
+            return true;
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
@@ -1206,13 +1211,53 @@ ko.jsonExpressionRewriting = (function () {
             }
 
             return jsonString;
+        },
+
+        insertPropertyReaderWritersIntoJson: function (jsonString) {
+            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
+            var propertyAccessorTokens = [];
+            var readers = "";
+            var isFirst = true;
+            for (var key in parsed) {
+                var value = parsed[key];
+                if (isWriteableValue(value)) {
+                    if (propertyAccessorTokens.length > 0)
+                        propertyAccessorTokens.push(", ");
+                    if(value[0]==="<" && value[value.length-1]===">") {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { __SKO__sc['" + value.slice(1,value.length-1) + "'] = __ko_value; }");
+                    } else {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+                    }
+                }
+                if(!isFirst)  {
+                    readers = readers+", ";
+                } else {
+                    isFirst = false;
+                }
+                if(value[0]==='<' && value[value.length-1]==='>') {
+                    readers = readers+key+": __SKO__sc['"+value.slice(1,value.length-1)+"']";
+                } else {
+                    readers = readers+key+": "+value;
+                }
+            }
+
+            jsonString = readers;
+
+            if (propertyAccessorTokens.length > 0) {
+                var allPropertyAccessors = propertyAccessorTokens.join("");
+                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            }
+
+            return jsonString;
         }
+
     };
 })();
 
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
 ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson', ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson);
 
 (function () {
     var defaultBindingAttributeName = "data-bind";
@@ -1220,7 +1265,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
 
     function parseBindingAttribute(attributeText, viewModel) {
         try {
-            var json = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(attributeText) + " } ";
+            var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
             return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel);
         } catch (ex) {
             throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
@@ -1288,7 +1333,8 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
-})();// For certain common events (currently just 'click'), allow a simplified data-binding syntax
+})();
+// For certain common events (currently just 'click'), allow a simplified data-binding syntax
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 var eventHandlersWithShortcuts = ['click'];
 ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
@@ -2216,4 +2262,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

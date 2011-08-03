@@ -5,7 +5,7 @@
 
     function parseBindingAttribute(attributeText, viewModel) {
         try {
-            var json = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(attributeText) + " } ";
+            var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
             return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel);
         } catch (ex) {
             throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);

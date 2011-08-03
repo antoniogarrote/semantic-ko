@@ -163,7 +163,9 @@ ko.utils = new (function () {
                 
             // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
             // the variable name "expression" itself will clash with a subproperty called "expression"
-            return (new Function("sc", "with(sc) { return (" + expression + ") }"))(scope);
+            // The model must available in the chain scope for arbritrary JS code to execute, but it 
+            // also must be reference by <> and [] URIs anc CURIES
+            return (new Function("__SKO__sc", "with(__SKO__sc){ return (" + expression + ") }"))(scope);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
