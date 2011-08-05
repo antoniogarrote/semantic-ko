@@ -33,6 +33,10 @@ ko.jsonExpressionRewriting = (function () {
                     switch (c) {
                         case '"':
                         case "'":
+                        case "<":
+                            tokenStart = position;
+                            tokenEndChar = ">";
+                            break;
                         case "/":
                             tokenStart = position;
                             tokenEndChar = c;
@@ -107,8 +111,10 @@ ko.jsonExpressionRewriting = (function () {
                 if (isWriteableValue(value)) {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
-                    if(value[0]==="<" && value[value.length-1]===">") {
+                    if(value[0]==="<" && value[value.length-1]===">" && key !== 'about') {
                         propertyAccessorTokens.push(key + " : function(__ko_value) { __SKO__sc['" + value.slice(1,value.length-1) + "'] = __ko_value; }");
+                    } else if(value[0]==="<" && value[value.length-1]===">" && key === 'about') {
+                        // nothing here
                     } else {
                         propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
                     }
@@ -118,8 +124,10 @@ ko.jsonExpressionRewriting = (function () {
                 } else {
                     isFirst = false;
                 }
-                if(value[0]==='<' && value[value.length-1]==='>') {
+                if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about') {
                     readers = readers+key+": __SKO__sc['"+value.slice(1,value.length-1)+"']";
+                } else if(value[0]==="<" && value[value.length-1]===">" && key === 'about') {
+                    readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else {
                     readers = readers+key+": "+value;
                 }
