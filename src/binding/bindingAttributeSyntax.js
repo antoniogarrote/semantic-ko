@@ -36,9 +36,18 @@
         
         new ko.dependentObservable(
             function () {
+
+                // add the current node to the view model
+                console.log("*** __SKO__ SETTING CURRENT NODE");
+                console.log(sko.currentResource(node));
+                ko.__SKO_currentNode = function() {
+                    return sko.currentResource(node);
+                };
+
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
                 parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
-                
+
+
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {

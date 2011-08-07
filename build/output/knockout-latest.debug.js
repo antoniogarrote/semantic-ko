@@ -1149,6 +1149,10 @@ ko.jsonExpressionRewriting = (function () {
                     switch (c) {
                         case '"':
                         case "'":
+                        case "<":
+                            tokenStart = position;
+                            tokenEndChar = ">";
+                            break;
                         case "/":
                             tokenStart = position;
                             tokenEndChar = c;
@@ -1223,8 +1227,10 @@ ko.jsonExpressionRewriting = (function () {
                 if (isWriteableValue(value)) {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
-                    if(value[0]==="<" && value[value.length-1]===">") {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { __SKO__sc['" + value.slice(1,value.length-1) + "'] = __ko_value; }");
+                    if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { ko.__SKO_currentNode()['" + value + "'] = __ko_value; }");
+                    } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
+                        // nothing here
                     } else {
                         propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
                     }
@@ -1234,8 +1240,10 @@ ko.jsonExpressionRewriting = (function () {
                 } else {
                     isFirst = false;
                 }
-                if(value[0]==='<' && value[value.length-1]==='>') {
-                    readers = readers+key+": __SKO__sc['"+value.slice(1,value.length-1)+"']";
+                if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": ko.__SKO_currentNode()['"+value+"']";
+                } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
+                    readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else {
                     readers = readers+key+": "+value;
                 }
@@ -1296,9 +1304,18 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
         
         new ko.dependentObservable(
             function () {
+
+                // add the current node to the view model
+                console.log("*** __SKO__ SETTING CURRENT NODE");
+                console.log(sko.currentResource(node));
+                ko.__SKO_currentNode = function() {
+                    return sko.currentResource(node);
+                };
+
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
                 parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
-                
+
+
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {

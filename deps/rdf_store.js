@@ -2196,11 +2196,6 @@ TurtleParser.parser = (function(){
       }
       
       function parse_statement() {
-          statementCounter++;
-          if(statementCounter % 1000 == 0) {
-              console.log(""+statementCounter);
-              printTime();
-          }
         var cacheKey = 'statement@' + pos;
         var cachedResult = cache[cacheKey];
         if (cachedResult) {
@@ -7186,7 +7181,7 @@ TurtleParser.parser = (function(){
         }
         
         var savedReportMatchFailures = reportMatchFailures;
-          reportMatchFailures = false
+        reportMatchFailures = false;
         if (input.substr(pos).match(/^[ ]/) !== null) {
           var result5 = input.charAt(pos);
           pos++;
@@ -7279,24 +7274,24 @@ TurtleParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }
@@ -34501,24 +34496,24 @@ SparqlParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }
@@ -35835,7 +35830,7 @@ RDFJSInterface.NamedNode.prototype.toString = function(){
 };
 
 RDFJSInterface.NamedNode.prototype.toNT = function() {
-    return this.toString();
+    return "<"+this.toString()+">";
 };
 
 RDFJSInterface.NamedNode.prototype.valueOf = function() {
@@ -35856,7 +35851,7 @@ RDFJSInterface.Triple.prototype.equals = function(otherTriple) {
 };
 
 RDFJSInterface.Triple.prototype.toString = function() {
-    return this.subject.toNT()+", "+this.predicate.toNT()+", "+this.object.toNT()+"\r\n";
+    return this.subject.toNT()+" "+this.predicate.toNT()+" "+this.object.toNT()+" . \r\n";
 };
 
 // Graph interface
@@ -36021,6 +36016,15 @@ RDFJSInterface.Graph.prototype.removeMatches = function(subject, predicate, obje
     return this;
 };
 
+RDFJSInterface.Graph.prototype.toNT = function() {
+    var n3 = "";
+
+    this.forEach(function(triple) {
+        n3 = n3 + triple.toString();
+    });
+
+    return n3;
+};
 
 // Builders for the query engine
 

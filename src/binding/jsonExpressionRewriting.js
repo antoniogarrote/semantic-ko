@@ -111,9 +111,9 @@ ko.jsonExpressionRewriting = (function () {
                 if (isWriteableValue(value)) {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
-                    if(value[0]==="<" && value[value.length-1]===">" && key !== 'about') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { __SKO__sc['" + value.slice(1,value.length-1) + "'] = __ko_value; }");
-                    } else if(value[0]==="<" && value[value.length-1]===">" && key === 'about') {
+                    if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { ko.__SKO_currentNode()['" + value + "'] = __ko_value; }");
+                    } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
                         propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
@@ -124,9 +124,9 @@ ko.jsonExpressionRewriting = (function () {
                 } else {
                     isFirst = false;
                 }
-                if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about') {
-                    readers = readers+key+": __SKO__sc['"+value.slice(1,value.length-1)+"']";
-                } else if(value[0]==="<" && value[value.length-1]===">" && key === 'about') {
+                if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": ko.__SKO_currentNode()['"+value+"']";
+                } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else {
                     readers = readers+key+": "+value;

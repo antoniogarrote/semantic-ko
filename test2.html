@@ -22,15 +22,23 @@
 
             var daModel = {'currentResource': ko.observable("http://test.com/a")};
             window['daModel'] = daModel;
-
+            console.log("*** initiating the PAGE");
             sko.traceResources(jQuery("#to-trace")[0],daModel, function(){
                 console.log("*** TRACED RESOURCES!!!");
                 sko.traceRelations(jQuery("#to-trace")[0],daModel, function(){
                     console.log("*** TRACED RELATIONS!!!");
+
                     ko.applyBindings({});
 
                     window['updateRootResource'] = function(newUri) {
                         sko.about['0'](newUri);
+                    };
+
+                    window['updateRelated'] = function(a,b) {
+                        var query = "DELETE { "+a+" <http://test.com/related> ?o }";
+                        query = query + " INSERT { "+a+" <http://test.com/related> "+b+" }";
+                        query = query + " WHERE { "+a+" <http://test.com/related> ?o }"; 
+
                     };
                 });
             });
@@ -48,9 +56,9 @@
   </script>
 
   <div id="to-trace" about="currentResource">
-    <p prototype="<http://test.com/title>"></p>
+    <p data-bind="text: <http://test.com/title>"></p>
     <span id='the-related-thing' rel='<http://test.com/related>'>
-      <p prototype="<http://test.com/title>"></p>      
+      <p data-bind="text: <http://test.com/count>"></p>      
     </span>
   </div>
 
