@@ -25,17 +25,20 @@
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
             throw "Template engine must return an array of DOM nodes";
 
-        if (renderedNodesArray)
-            ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
-                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
-            });
-
+        // @modified
+        // Change the positoin of switch and if(render
+        // so the rendered node is added to the DOM before being unmemoized
         switch (renderMode) {
             case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
             case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
             case "ignoreTargetNode": break;
             default: throw new Error("Unknown renderMode: " + renderMode);
         }
+
+        if (renderedNodesArray)
+            ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
+                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
+            });
 
         if (options['afterRender'])
             options['afterRender'](renderedNodesArray, data);

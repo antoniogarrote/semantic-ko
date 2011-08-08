@@ -15,7 +15,10 @@ ko.templateRewriting = (function () {
                 var tagToRetain = arguments[1];
                 var dataBindAttributeValue = arguments[6];
 
-                dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindAttributeValue);
+                // @modified
+                // modified the rewritting function used
+                //dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindAttributeValue);
+                dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(dataBindAttributeValue);
 
                 // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
                 // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
@@ -28,8 +31,14 @@ ko.templateRewriting = (function () {
 
         applyMemoizedBindingsToNextSibling: function (bindings) {
             return ko.memoization.memoize(function (domNode, viewModel) {
-                if (domNode.nextSibling)
-                    ko.applyBindingsToNode(domNode.nextSibling, bindings, viewModel);
+                if (domNode.nextSibling) {
+                    // @modified
+                    sko.traceResources(domNode.nextSibling, viewModel, function(){
+                        sko.traceRelations(domNode.nextSibling, viewModel, function(){
+                            ko.applyBindingsToNode(domNode.nextSibling, bindings, viewModel);
+                        });
+                    });
+                }
             });
         }
     }
