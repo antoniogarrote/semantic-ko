@@ -38,9 +38,9 @@
             function () {
 
                 // add the current node to the view model
-                console.log("*** __SKO__ SETTING CURRENT NODE");
+                console.log("*** sko.resource SETTING CURRENT NODE");
                 console.log(sko.currentResource(node));
-                ko.__SKO_currentNode = function() {
+                sko.resource = function() {
                     return sko.currentResource(node);
                 };
 

@@ -15,6 +15,10 @@ ko.utils.domNodeDisposal = new (function () {
     }
     
     function cleanSingleNode(node) {
+        // @modified
+        // clean RDF observers
+        sko.cleanNode(node)
+
         // Run all the dispose callbacks
         var callbacks = getDisposeCallbacksCollection(node, false);
         if (callbacks) {

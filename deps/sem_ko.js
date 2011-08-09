@@ -28,11 +28,26 @@ Utils.repeat = function(c,max,floop,fend,env) {
 
 SemanticKnockOut = {};
 window['sko'] = SemanticKnockOut;
+sko.activeDebug = false;
+
+sko.log = function(msg) {
+    if(sko.activeDebug) {
+        console.log(msg);
+    }
+};
 
 /**
  * Starts the library. Call this before anything else.
  */
-sko.init = function()  {
+sko.ready = function()  {
+
+    // reset state
+    sko.aboutResourceMap = {};
+    sko.aboutResourceSubscriptionMap = {};
+    sko.aboutCounter = 0;
+    sko.generatorId = 0;
+    sko.generatorsMap = {};
+
     var cb = null;
     if(arguments.length === 2) {
         sko.store = arguments[0];
@@ -58,6 +73,7 @@ sko.nextBlankLabel = function(){
 
 // Collection of observable resources
 sko.aboutResourceMap = {};
+sko.aboutResourceSubscriptionMap = {};
 
 sko.aboutCounter = 0;
 
@@ -86,34 +102,38 @@ sko.about = function(aboutValue, viewModel, cb) {
             // register the new observer and resource
             sko.store.node(sko.plainUri(uri), function(success, resource) {
                 if(success) {
-                    console.log("FOUND RESOURCE: "+uri);
-                    console.log(resource);
-                    console.log(" FOR "+sko.plainUri(uri));
+                    sko.log("FOUND RESOURCE: "+uri);
+                    sko.log(resource);
+                    sko.log(" FOR "+sko.plainUri(uri));
                     // id -> Resource
-                    sko.aboutResourceMap[nextId] = new sko.Resource(uri,resource);
+                    sko.log(" ------------> "+nextId+" : "+uri);
+                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, uri,resource);
                     // id -> observer
                     sko.about[nextId] = ko.observable(uri);
      
                     // we observe changes in the about resource
-                    sko.about[nextId].subscribe(function(nextUri) {
-                        console.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+                    var subscription = sko.about[nextId].subscribe(function(nextUri) {
+                        sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
 
                         if(nextUri == null) {
-                            console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                            sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                             nextUri = sko.nextBlankLabel();
                         }
 
                         sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
                             if(success) {
                                 var newUri = nextResource.toArray()[0].subject.valueOf();
+                                sko.log(" ------------> "+nextId+" : "+newUri+" 2");
                                 sko.aboutResourceMap[nextId].about(newUri);
                             } else {
                                 // reset resource?
-                                console.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                sko.log(" ------------> "+nextId+" : "+nextUri+" 3");
                                 sko.aboutResourceMap[nextId].about(nextUri);
                             }
                         });
                     });
+                    sko.aboutResourceSubscriptionMap[nextId] = subscription;
                 } else {
                     // what here?
                 }
@@ -126,19 +146,19 @@ sko.about = function(aboutValue, viewModel, cb) {
             sko.about[nextId] = ko.dependentObservable({
                 read: function(){
                     var uri = aboutValue();
-                    console.log("*** OBSERVABLE READING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+uri);
+                    sko.log("*** OBSERVABLE READING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+uri);
 
                     if(uri == null) {
-                        console.log(" ** URI IS BLANK -> GEN BLANK LABEL");
+                        sko.log(" ** URI IS BLANK -> GEN BLANK LABEL");
                         uri = sko.nextBlankLabel();
                     }
 
                     return uri;
                 },
                 write: function(value) {
-                    console.log("*** OBSERVABLE WRITING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+value);
+                    sko.log("*** OBSERVABLE WRITING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+value);
                     if(value == null) {
-                        console.log(" ** URI IS BLANK -> GEN BLANK LABEL");
+                        sko.log(" ** URI IS BLANK -> GEN BLANK LABEL");
                         value = sko.nextBlankLabel();
                     }
 
@@ -151,33 +171,39 @@ sko.about = function(aboutValue, viewModel, cb) {
             sko.store.node(sko.plainUri(sko.about[nextId]()), function(success, resource) {
                 if(success) {
                     // id -> Resource
-                    sko.aboutResourceMap[nextId] = new sko.Resource(sko.about[nextId](), resource);
+                    sko.log(" ------------> "+nextId+" : "+resource+" 4");
+                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, sko.about[nextId](), resource);
      
                     // we observe changes in the about resource
-                    sko.about[nextId].subscribe(function(nextUri) {
-                        console.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+                    var subscription = sko.about[nextId].subscribe(function(nextUri) {
+                        sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
                         if(nextUri != null) {
                             sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
                                 if(success) {
                                     if(nextResource.toArray().length>0) {
                                         var newUri = nextResource.toArray()[0].subject.toNT();
+                                        sko.log(" ------------> "+nextId+" : "+newUri+" 5");
                                         sko.aboutResourceMap[nextId].about(newUri);
                                     } else {
                                         // reset resource?
-                                        console.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                        sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                        sko.log(" ------------> "+nextId+" : "+nextUri+" 6");
                                         sko.aboutResourceMap[nextId].about(nextUri);
                                     }
                                 } else {
-                                    console.log("Error updating 3 resource for URI:"+nextUri+" in SKO about node observer");
-                                    console.log("*** NO RESOURCE FOR URI:"+nextUri + " NEXT ID:"+nextId);
+                                    sko.log("Error updating 3 resource for URI:"+nextUri+" in SKO about node observer");
+                                    sko.log("*** NO RESOURCE FOR URI:"+nextUri + " NEXT ID:"+nextId);
+                                    sko.log(" ------------> "+nextId+" : "+nextUri+" 7");
                                     sko.aboutResourceMap[nextId].about(nextUri);
                                 }
                             });
                         } else {
-                            console.log("*** NO RESOURCE FOR URI:"+nextUri);
+                            sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                            sko.log(" ------------> "+nextId+" : NEW BLANK  8");
                             sko.aboutResourceMap[nextId].about(sko.nextBlankLabel());
                         }
                     });
+                    sko.aboutResourceSubscriptionMap[nextId] = subscription;
                 } else {
                     // what here?
                 }
@@ -189,6 +215,7 @@ sko.about = function(aboutValue, viewModel, cb) {
 
 sko.rel = function(relValue, node, viewModel, cb) {
     var nextId = ''+sko.aboutCounter;
+
     var relValueUri = null;
     sko.aboutCounter++;
 
@@ -198,51 +225,57 @@ sko.rel = function(relValue, node, viewModel, cb) {
         
         sko.about[nextId] = ko.dependentObservable({
             read: function(){
-                console.log("*** OBSERVABLE READING RELATED  DEPENDING NODE ABOT ID:"+nextId);
+                sko.log("*** OBSERVABLE READING RELATED  DEPENDING NODE ABOT ID:"+nextId);
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
-                console.log(resource);                
+                sko.log(resource);                
                 if(resource != null) {
-                    console.log(" ** about:"+resource.about());
-                    console.log("*** Found parent resource: "+resource.about());
+                    sko.log(" ** about:"+resource.about());
+                    sko.log("*** Found parent resource: "+resource.about());
 
                     if(resource[uri]) {
                         var relResourceUri = resource[uri]();
                         if(relResourceUri != null && !sko.isSKOBlankNode(resource[uri]())) {
-                            console.log("*** found related resource: "+relResourceUri);
-                            // register the new observer and resource
-                            sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
-                                console.log("CREATED NODE FOR ID "+nextId+" AND URI: "+sko.plainUri(relResourceUri));
-                                console.log(resource);
-                                sko.aboutResourceMap[nextId] = new sko.Resource(relResourceUri, resource);
-                            });
+                            if(sko.aboutResourceMap[nextId] == null || sko.aboutResourceMap[nextId].about() != relResourceUri) {
+                                sko.log("*** found related resource: "+relResourceUri);
+                                // register the new observer and resource
+                                sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
+                                    sko.log("CREATED NODE FOR ID "+nextId+" AND URI: "+sko.plainUri(relResourceUri));
+                                    sko.log(resource);
+                                    sko.log(" ------------> "+nextId+" : "+relResourceUri+" 8b");
+                                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, relResourceUri, resource);
+                                });
+                            } else {
+                                sko.log("*** Related resource hasn't changed");
+                            }
                             
                             return relResourceUri;
                         } else {
                             if(relResourceUri == null) {
-                                console.log("*** related resource is null");
+                                sko.log("*** related resource is null");
 
-                                console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                                 var nextUri = sko.nextBlankLabel();
                                 
-                                console.log(" ** setting parent node related resource to "+nextUri);
+                                sko.log(" ** setting parent node related resource to "+nextUri);
                                 resource[uri](nextUri);
                             } else {
                                 if(sko.aboutResourceMap[nextId]) {
                                     // @todo here
-                                    console.log("*** setting new value for related resource "+nextUri);
+                                    sko.log("*** setting new value for related resource "+nextUri);
+                                    sko.log(" ------------> "+nextId+" : "+nextUri+" 9");
                                     sko.aboutResourceMap[nextId].about(nextUri);
                                 } else {
                                     // what here?
-                                    console.log("!! Should I create the new blank node?");
+                                    sko.log("!! Should I create the new blank node?");
                                 }
                             }
                             return nextUri;
                         }
                     } else {
-                        console.log("!!! parent resource doest not link to the related resource");                    
+                        sko.log("!!! parent resource doest not link to the related resource");                    
                     }
                 } else {
-                    console.log("!!! impossible to find parent resource");
+                    sko.log("!!! impossible to find parent resource");
                 }},
 
             // we setup the related object of the parent resource
@@ -250,33 +283,33 @@ sko.rel = function(relValue, node, viewModel, cb) {
             write: function(uri) {
 
                 if(uri == null) {
-                    console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                     uri = sko.nextBlankLabel();
                 }
 
-                console.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+                sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
 
                 if(resource != null) {
-                    console.log("*** Found parent resource: "+resource.about());
+                    sko.log("*** Found parent resource: "+resource.about());
                     if(resource[relValueUri]) {
-                        console.log("*** Setting new related resource in parent resource found: "+uri);                    
+                        sko.log("*** Setting new related resource in parent resource found: "+uri);                    
                         resource[relValueUri](uri);
                     } else {
-                        console.log("!!! parent resource doest not link to the related resource");                    
+                        sko.log("!!! parent resource doest not link to the related resource");                    
                     }
                 } else {
-                    console.log("!!! impossible to find parent resource");
+                    sko.log("!!! impossible to find parent resource");
                 }                
             },
 
             owner: viewModel
         });
 
-        sko.about[nextId].subscribe(function(nextUri) {
-            console.log("*** OBSERVING RELATED NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+        var subscription = sko.about[nextId].subscribe(function(nextUri) {
+            sko.log("*** OBSERVING RELATED NODE ABOT ID:"+nextId+" new value -> "+nextUri);
             if(nextUri == null) {
-                console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                 nextUri = sko.nextBlankLabel();
             }
             
@@ -285,47 +318,49 @@ sko.rel = function(relValue, node, viewModel, cb) {
                     sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
                         if(success) {
                             var newUri = nextResource.toArray()[0].subject.valueOf();
-                            sko.aboutResourceMap[nextId].about(newUri);
+                            sko.log(" ------------> "+nextId+" : "+uri+" 10");
+                            sko.aboutResourceMap[nextId].about(uri);
                         } else {
-                            console.log("Error updating 1 resource for URI:"+nextUri+" in SKO about related node observer");
+                            sko.log("Error updating 1 resource for URI:"+nextUri+" in SKO about related node observer");
                         }
                     });
                 }
             } else {
                 // @todo
-                console.log("!! this resource is now null, should be removed from list of resources?");
+                sko.log("!! this resource is now null, should be removed from list of resources?");
             }
         });
-
+        sko.aboutResourceSubscriptionMap[nextId] = subscription;
     } else {
         sko.about[nextId] = ko.dependentObservable({
             read: function(){
                 var uri = relValue();
-                console.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+                sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
 
                 if(uri == null) {
-                    console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                     uri = sko.nextBlankLabel();
                 }
                 
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
                 if(resource != null) {
-                    console.log("*** Found parent resource: "+resource.about());
+                    sko.log("*** Found parent resource: "+resource.about());
                     if(resource[uri]) {
                         var relResourceUri = resource[uri]();
                     
-                        console.log("*** found related resource: "+relResourceUri);
+                        sko.log("*** found related resource: "+relResourceUri);
                         // register the new observer and resource
                         sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
-                            sko.aboutResourceMap[nextId] = new sko.Resource(relResourceUri, resource);
+                            sko.log(" ------------> "+nextId+" : "+relResourceUri+" 11");
+                            sko.aboutResourceMap[nextId] = new sko.Resource(nextId, relResourceUri, resource);
                         });
 
                         return relResourceUri;
                     } else {
-                        console.log("!!! parent resource doest not link to the related resource");                    
+                        sko.log("!!! parent resource doest not link to the related resource");                    
                     }
                 } else {
-                    console.log("!!! impossible to find parent resource");
+                    sko.log("!!! impossible to find parent resource");
                 }
             },
 
@@ -334,49 +369,53 @@ sko.rel = function(relValue, node, viewModel, cb) {
             write: function(uri) {
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
 
-                console.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+                sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
 
                 if(uri == null) {
-                    console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                     uri = sko.nextBlankLabel();
                 }
 
                 if(resource != null) {
-                    console.log("*** Found parent resource: "+resource.about());
+                    sko.log("*** Found parent resource: "+resource.about());
                     if(resource[relValue()]) {
-                        console.log("*** Setting new related resource in parent resource found: "+uri);                    
+                        sko.log("*** Setting new related resource in parent resource found: "+uri);                    
                         resource[relValue()](uri);
                         relValue(uri);
                     } else {
-                        console.log("!!! parent resource doest not link to the related resource");                    
+                        sko.log("!!! parent resource doest not link to the related resource");                    
                     }
                 } else {
-                    console.log("!!! impossible to find parent resource");
+                    sko.log("!!! impossible to find parent resource");
                 }                
             },
 
             owner: viewModel
         });
 
-        sko.about[nextId].subscribe(function(nextUri) {
-            console.log("*** OBSERVING RELATED NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+        var subscription = sko.about[nextId].subscribe(function(nextUri) {
+            sko.log("*** OBSERVING RELATED NODE (F) ABOT ID:"+nextId+" new value -> "+nextUri);
 
             if(nextUri == null) {
-                console.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                 nextUri = sko.nextBlankLabel();
             }
 
-            if(sko.plainUri(nextUri) !== sko.plainUri(sko.about[nextId]())) {
+            if(sko.plainUri(nextUri) != sko.plainUri(sko.about[nextId]())) {
                 sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
                     if(success) {
                         var newUri = nextResource.toArray()[0].subject.valueOf();
+                        sko.log(" ------------> "+nextId+" : "+newUri+" 12");
                         sko.aboutResourceMap[nextId].about(newUri);
                     } else {
-                        console.log("Error updating  2 resource for URI:"+nextUri+" in SKO about related node observer");
+                        sko.log("Error updating  2 resource for URI:"+nextUri+" in SKO about related node observer");
                     }
                 });
+            } else {
+                sko.log("*** Related about resource hasn't changed");
             }
         });
+        sko.aboutResourceSubscriptionMap[nextId] = subscription;
     }
 
     cb(nextId);
@@ -426,11 +465,13 @@ sko.effectiveValue = function(term) {
     }
 };
 
-sko.Resource = function(subject, node) {
+sko.Resource = function(resourceId, subject, node) {
+    this.resourceId = resourceId;
     this.valuesMap = {};
+    this.subscriptions = [];
     var that = this;
     node.forEach(function(triple){
-        console.log(triple);
+        sko.log(triple);
         if(triple.object.interfaceName === 'NamedNode') {
             that.valuesMap[triple.predicate.toNT()] = triple.object.toNT();
             that[triple.predicate.toNT()] = ko.observable(triple.object.toNT());
@@ -448,16 +489,17 @@ sko.Resource = function(subject, node) {
 
     // observe changes in the subject of this resource
     var that = this;
-    this.about.subscribe(function(newUri){
-        console.log("SKO Resource new resource:"+newUri);
+    var subscription = this.about.subscribe(function(newUri){
+        sko.log("SKO Resource new resource:"+newUri);
 
-        console.log("*** STOP OBSERVING NODE STORE FOR "+that.about());
+        sko.log("*** STOP OBSERVING NODE STORE FOR "+that.about());
         sko.store.stopObservingNode(that.storeObserverFn);
 
         if(newUri != null && newUri.indexOf("_:sko")!=0) {
+            sko.log("*** START OBSERVING NODE STORE FOR "+that.about());
             sko.store.startObservingNode(sko.plainUri(newUri), that.storeObserverFn);
         } else {
-            console.log("*** nullifying resources");
+            sko.log("*** nullifying resources");
 
             // set properties to null
             for(var p in that.valuesMap) {
@@ -468,6 +510,9 @@ sko.Resource = function(subject, node) {
             }
         }
     });
+
+    this.subscriptions.push(subscription);
+
     
     // observe notifications from KO and the RDF store
     sko.Resource.koObserver(this);
@@ -478,7 +523,7 @@ sko.Resource = function(subject, node) {
  * Must update the value in the RDFstore
  */
 sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
-    console.log("*** received KO notification for property "+property+" -> "+newValue);
+    sko.log("*** received KO notification for property "+property+" -> "+newValue);
     if(this.valuesMap[property] == null) {
         // property is not defined -> create
         // @todo
@@ -495,7 +540,7 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
             query = query.replace(/"</g,"<").replace(/>"/g,">");
 
             this.valuesMap[property] = newValue;
-            console.log("*** updating STORE: \n  "+query);
+            sko.log("*** updating STORE: \n  "+query);
             sko.store.execute(query);
         }
     }
@@ -505,19 +550,48 @@ sko.isSKOBlankNode = function(term) {
     return term.indexOf("_:sko") === 0;
 }
 
-///**
-// * This resource is referencing a non existent graph node
-// */
-//sko.Resource.nullify = function(){
-// 
-//};
+sko.Resource.prototype.disconnect = function() {
+    sko.log(" ** DISCONNECTING");
+    sko.store.stopObservingNode(this.storeObserverFn);
+    sko.log(" ** disconnected STORE");
+    for(var i=0; i<this.subscriptions.length; i++) {
+        sko.log(" ** disconnecting subscription");
+        this.subscriptions[i].dispose();
+    }
+
+    sko.log(" ** disconnecting resource map");
+    sko.aboutResourceSubscriptionMap[this.resourceId].dispose();
+    sko.log(" ** deleting");
+    delete sko.aboutResourceMap[this.resourceId];
+    delete sko.about[this.resourceId];
+};
+
+sko.cleanNode = function(node) {
+    sko.log("*** CLEANING!");
+    sko.log(node);
+    var thisId = jQuery(node).attr("aboutId");
+    var ids = [];
+    if(thisId != null) {
+        ids.push(thisId);
+    }
+    ids = ids.concat(sko.childrenResourceIds(node));
+    for(var i=0; i<ids.length; i++) {
+        if(sko.aboutResourceMap[ids[i]] != null) {
+            sko.log("*** DISCONNECTING "+ids[i]);
+            sko.log(sko.aboutResourceMap[ids[i]]);
+            sko.aboutResourceMap[ids[i]].disconnect();
+        }
+    }
+}
 
 sko.Resource.koObserver = function(skoResource) {
+    var that = this;
     var makeResourceObserver = function(resource,property) {
-        console.log("*** subcribing to property "+property);
-        resource[property].subscribe(function(value){
+        sko.log("*** subcribing to property "+property);
+        var subscription = resource[property].subscribe(function(value){
             resource.notifyPropertyChange(property,value);
         });
+        resource.subscriptions.push(subscription);
     };
 
     for(var p in skoResource.valuesMap) {
@@ -527,20 +601,20 @@ sko.Resource.koObserver = function(skoResource) {
 
 sko.Resource.storeObserver = function(skoResource) {
     return function(node)  {
-        console.log("*** received notification change from STORE in resource "+skoResource.about());
+        sko.log("*** received notification change from STORE in resource "+skoResource.about());
         if(skoResource.about()==="_:sko_10") {
             return;
         }
         var newValues = {};
 
-        console.log("*** triples in STORE resource -> "+node.toArray().length);
+        sko.log("*** triples in STORE resource -> "+node.toArray().length);
 
         node.forEach(function(triple){
             if(triple.object.interfaceName === 'NamedNode') {
-                console.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
+                sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
                 newValues[triple.predicate.toNT()] = triple.object.toNT();
             } else {
-                console.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
                 newValues[triple.predicate.toNT()] = triple.object.valueOf();
             }
         });
@@ -574,50 +648,50 @@ sko.Resource.storeObserver = function(skoResource) {
         skoResource.valuesMap = newValueMap;
 
         for(var i=0; i<toNullify.length; i++) {
-            console.log("*** setting value to null "+toNullify[i]+" -> NULL");
+            sko.log("*** setting value to null "+toNullify[i]+" -> NULL");
             skoResource[toNullify[i]](null);
         }
 
         for(var i=0; i<toUpdate.length; i++) {
-            console.log("*** updating value "+toUpdate[i]+" -> "+skoResource.valuesMap[toUpdate[i]]);
+            sko.log("*** updating value "+toUpdate[i]+" -> "+skoResource.valuesMap[toUpdate[i]]);
             skoResource[toUpdate[i]](skoResource.valuesMap[toUpdate[i]]);
         }
 
         for(var i=0; i<toCreate.length; i++) {
-            console.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
+            sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
             skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
         }
 
-        console.log("*** END MODIFICATION");
+        sko.log("*** END MODIFICATION");
     };    
 };
 
 // custom bindings
 
-ko.bindingHandlers.about = {
-    init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-        // This will be called when the binding is first applied to an element
-        // Set up any initial state, event handlers, etc. here
-
-        var value = valueAccessor();
-        $(element).attr("about", value);
-    },
-    
-    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-        // This will be called once when the binding is first applied to an element,
-        // and again whenever the associated observable changes value.
-        // Update the DOM element based on the supplied values here.
-
-        var value = valueAccessor();
-        $(element).attr("about", value);
-    }
-};
+//ko.bindingHandlers.about = {
+//    init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+//        // This will be called when the binding is first applied to an element
+//        // Set up any initial state, event handlers, etc. here
+// 
+//        var value = valueAccessor();
+//        $(element).attr("about", value);
+//    },
+//    
+//    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+//        // This will be called once when the binding is first applied to an element,
+//        // and again whenever the associated observable changes value.
+//        // Update the DOM element based on the supplied values here.
+// 
+//        var value = valueAccessor();
+//        $(element).attr("about", value);
+//    }
+//};
 
 
 // trace resources
 sko.traceResources = function(rootNode, model, cb) {
-    console.log("** TRACING:");
-    console.log(rootNode);
+    sko.log("** TRACING:");
+    sko.log(rootNode);
     var nodes = [];
     if(jQuery(rootNode).attr("about") || jQuery(rootNode).attr("data-bind")) {
         nodes.push(rootNode);
@@ -666,59 +740,63 @@ sko.traceResources = function(rootNode, model, cb) {
  * invoked.
  */
 sko.currentResource = function(node) {
-    console.log("in current resource");
-    console.log(node);
+    sko.log("in current resource");
+    sko.log(node);
     if(node == null) {
-        console.log("!!! top of DOM tree, About node not found");
+        sko.log("!!! top of DOM tree, About node not found");
         return null;
     }
     var aboutId = jQuery(node).attr('aboutId');
-    console.log("about id:"+aboutId);
+    sko.log("about id:"+aboutId);
 
     if(aboutId) {
         var uri = sko.about[aboutId]();
-        console.log("uri:"+uri);
+        sko.log("uri:"+uri);
         if(uri != null) {
             return sko.aboutResourceMap[aboutId];
         } else {
-            console.log("!!! current resource is null: "+aboutId);
+            sko.log("!!! current resource is null: "+aboutId);
         }
     } else {
-        console.log("recurring");
+        sko.log("recurring");
         return sko.currentResource(jQuery(node).parent().toArray()[0]);
     }
 };
 
 sko.currentResourceNode = function(node) {
-    console.log("in current resource node");
-    console.log(node);
+    sko.log("in current resource node");
+    sko.log(node);
     if(node == null) {
-        console.log("!!! top of DOM tree, About node not found");
+        sko.log("!!! top of DOM tree, About node not found");
         return null;
     }
     var aboutId = jQuery(node).attr('aboutId');
-    console.log("about id:"+aboutId);
+    sko.log("about id:"+aboutId);
 
     if(aboutId) {
         var uri = sko.about[aboutId]();
-        console.log("uri:"+uri);
+        sko.log("uri:"+uri);
         if(uri != null) {
             return node;
         } else {
-            console.log("!!! current resource is null: "+aboutId);
+            sko.log("!!! current resource is null: "+aboutId);
             return null;
         }
     } else {
-        console.log("recurring");
+        sko.log("recurring");
         return sko.currentResourceNode(jQuery(node).parent().toArray()[0]);
     }
 };
 
+sko.childrenResourceIds = function(node) {
+    return jQuery(node).find("*[aboutId]").map(function(){ return jQuery(this).attr("aboutId") });
+};
+
 sko.traceRelations = function(rootNode, model, cb) {
-    console.log("*** TRACING RELATIONS:");
+    sko.log("*** TRACING RELATIONS:");
     rootNode = (sko.currentResourceNode(rootNode) || rootNode);
-    console.log("*** FOUND ROOT NODE TO LOOK FOR RELATIONS:");
-    console.log(rootNode);
+    sko.log("*** FOUND ROOT NODE TO LOOK FOR RELATIONS:");
+    sko.log(rootNode);
 
     var nodes = [];
     if(jQuery(rootNode).attr("rel") || jQuery(rootNode).attr("data-bind")) {
@@ -726,8 +804,8 @@ sko.traceRelations = function(rootNode, model, cb) {
     }
     var childNodes = jQuery(rootNode).find("*[rel], *[data-bind]").toArray();
     nodes = nodes.concat(childNodes);
-    console.log(" ** NODES TO LOOK FOR RELATED RESOURCES");
-    console.log(nodes);
+    sko.log(" ** NODES TO LOOK FOR RELATED RESOURCES");
+    sko.log(nodes);
 
     var registerFn = function(k,env){
         node = nodes[env._i];
@@ -752,10 +830,17 @@ sko.traceRelations = function(rootNode, model, cb) {
                 rel = model[rel];
             }
    
-            sko.rel(rel, node, model, function(aboutId) {
-                jQuery(node).attr('aboutId',aboutId);
+            var nextId = jQuery(node).attr("aboutId");
+            if(nextId == null) {
+                sko.log("*** CREATING RELATED NODE");
+                sko.rel(rel, node, model, function(aboutId) {
+                    jQuery(node).attr('aboutId',aboutId);
+                    k(registerFn,env);
+                });
+            } else {
+                sko.log("*** NODE IS ALREADY TRACED");
                 k(registerFn,env);
-            });
+            }
         } else {
             k(registerFn, env);
         }
@@ -765,5 +850,53 @@ sko.traceRelations = function(rootNode, model, cb) {
 
     Utils.repeat(0,nodes.length, registerFn, function(env) {
         cb();
+    });
+};
+
+
+
+sko.generatorId = 0;
+sko.generatorsMap = {};
+
+sko.where = function(query) {
+    query = "select ?subject where "+query;
+    var nextId = ''+sko.generatorId;
+    sko.generatorId++;
+
+    sko.generatorsMap[nextId] = ko.observable([]);
+
+    sko.log("*** WHERE QUERY: " +query);
+    sko.store.startObservingQuery(query, function(bindingsList){
+        var acum = [];
+        sko.log(" ** RESULTS!!!");
+
+        for(var i=0; i<bindingsList.length; i++) {
+            sko.log(" ** ADDING VALUE "+ bindingsList[i].subject.value);
+            acum.push("<"+bindingsList[i].subject.value+">");
+        }
+
+        sko.log("** SETTING VALUE");
+        sko.log(acum)
+        sko.generatorsMap[nextId](acum)
+    });
+
+    return sko.generatorsMap[nextId];
+}
+
+/**
+ * Applies bindings and RDF nodes to the DOM tree
+ */
+sko.applyBindings = function(node, viewModel, cb) {
+    if(typeof(node) === 'string') {
+        node = jQuery(node)[0];
+    }
+    
+    sko.traceResources(node, viewModel, function(){
+        sko.traceRelations(node, viewModel, function(){
+            ko.applyBindings(viewModel, node);
+            if(cb != null) {
+                cb();
+            }
+        });
     });
 };

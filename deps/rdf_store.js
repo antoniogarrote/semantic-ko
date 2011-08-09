@@ -38833,7 +38833,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    try{
+    //try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -38857,13 +38857,14 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-    } catch(e) {
-        if(e.name && e.name==='SyntaxError') {
-            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
-        } else {
-            callback(false, "Query execution error");
-        }
-    }
+//    } catch(e) {
+//        if(e.name && e.name==='SyntaxError') {
+//            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+//        } else {
+//            console.log(e);
+//            callback(false, "Query execution error");
+//        }
+//    }
 };
 
 // Retrieval queries
@@ -40214,8 +40215,14 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
                 if(event === 'eventsFlushed' && mustFlush ) {
                     mustFlush = false;
                     callback(node);
-                } else {
+                } else if(event !== 'eventsFlushed') {
                     mustFlush = true;
+                    console.log("triples");
+                    console.log(query);
+                    console.log(triples);
+                    if(triples==null) {
+                        debugger;
+                    }
                     for(var i = 0; i<triples.length; i++) {
                         var triple = triples[i];
                         var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
@@ -40308,8 +40315,10 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
                      });
                  },
                  function(env) {
+                     console.log("EXECUTING OBSERVE QUERY");
                      that.engine.execute(query,
                                          function(success, results){
+                                             console.log("GOT RESULTS");
                                              if(success){
                                                  callback(results);
                                              } else {
@@ -40579,9 +40588,9 @@ Store.Store.prototype.startObservingQuery = function() {
     var callback = arguments[1];
     var endCallback = arguments[2];
     if(endCallback!=null) {
-        this.engine.callbacksBackend.observeQuery(uri, callback, endCallback);
+        this.engine.callbacksBackend.observeQuery(query, callback, endCallback);
     } else {
-        this.engine.callbacksBackend.observeQuery(uri, callback, function(){});
+        this.engine.callbacksBackend.observeQuery(query, callback, function(){});
     }
 };
 

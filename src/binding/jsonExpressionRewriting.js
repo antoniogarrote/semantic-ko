@@ -112,7 +112,7 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { ko.__SKO_currentNode()['" + value + "'] = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.resource()['" + value + "'] = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
@@ -125,7 +125,7 @@ ko.jsonExpressionRewriting = (function () {
                     isFirst = false;
                 }
                 if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": ko.__SKO_currentNode()['"+value+"']";
+                    readers = readers+key+": sko.resource()['"+value+"']";
                 } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else {
