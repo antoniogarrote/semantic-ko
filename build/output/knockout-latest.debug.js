@@ -1233,8 +1233,12 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.resource()['" + value + "'] = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
+                    } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
+                        // nothing here
+                    } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
                         propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
@@ -1246,9 +1250,13 @@ ko.jsonExpressionRewriting = (function () {
                     isFirst = false;
                 }
                 if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": sko.resource()['"+value+"']";
+                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
+                } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
                 } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
+                } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && (key === 'about' || key === 'rel')) {
+                    readers = readers+key+": sko.rdf.prefixes.resolve('"+value.slice(1,value.length-1)+"')";
                 } else {
                     readers = readers+key+": "+value;
                 }
@@ -1311,9 +1319,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
             function () {
 
                 // add the current node to the view model
-                console.log("*** sko.resource SETTING CURRENT NODE");
-                console.log(sko.currentResource(node));
-                sko.resource = function() {
+                sko.current = function() {
                     return sko.currentResource(node);
                 };
 
@@ -2351,11 +2357,16 @@ sko.ready = function()  {
         sko.store = arguments[0];
         cb = arguments[1];
 
+        sko.rdf = sko.store.rdf;
+
         cb(true);
     } else {
         cb = arguments[0];
         rdfstore.create(function(store) {
             sko.store = store;
+
+            sko.rdf = sko.store.rdf;
+
             cb(true);
         });
     }
@@ -2518,7 +2529,7 @@ sko.rel = function(relValue, node, viewModel, cb) {
     sko.aboutCounter++;
 
     if(typeof(relValue) === 'string') {
-        var uri = relValue;
+        var uri = sko.NTUri(relValue);
         relValueUri = uri;
         
         sko.about[nextId] = ko.dependentObservable({
@@ -2533,6 +2544,7 @@ sko.rel = function(relValue, node, viewModel, cb) {
                     if(resource[uri]) {
                         var relResourceUri = resource[uri]();
                         if(relResourceUri != null && !sko.isSKOBlankNode(resource[uri]())) {
+                            relResourceUri = sko.NTUri(relResourceUri);
                             if(sko.aboutResourceMap[nextId] == null || sko.aboutResourceMap[nextId].about() != relResourceUri) {
                                 sko.log("*** found related resource: "+relResourceUri);
                                 // register the new observer and resource
@@ -2585,6 +2597,8 @@ sko.rel = function(relValue, node, viewModel, cb) {
                     uri = sko.nextBlankLabel();
                 }
 
+                uri = sko.NTUri(uri);
+
                 sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
 
@@ -2610,7 +2624,9 @@ sko.rel = function(relValue, node, viewModel, cb) {
                 sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                 nextUri = sko.nextBlankLabel();
             }
-            
+
+            nextUri = sko.NTUri(nextUri);
+
             if(sko.about[nextId]() != null) {
                 if(sko.plainUri(nextUri) !== sko.plainUri(sko.about[nextId]())) {
                     sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
@@ -2633,6 +2649,8 @@ sko.rel = function(relValue, node, viewModel, cb) {
         sko.about[nextId] = ko.dependentObservable({
             read: function(){
                 var uri = relValue();
+                uri = sko.NTUri(uri);
+
                 sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
 
                 if(uri == null) {
@@ -2665,6 +2683,7 @@ sko.rel = function(relValue, node, viewModel, cb) {
             // we setup the related object of the parent resource
             // this will trigger the observer that will update this model proxy
             write: function(uri) {
+                uri = sko.NTUri(uri);
                 var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
 
                 sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
@@ -2692,6 +2711,7 @@ sko.rel = function(relValue, node, viewModel, cb) {
         });
 
         var subscription = sko.about[nextId].subscribe(function(nextUri) {
+            nextUri = sko.NTUri(nextUri);
             sko.log("*** OBSERVING RELATED NODE (F) ABOT ID:"+nextId+" new value -> "+nextUri);
 
             if(nextUri == null) {
@@ -2722,6 +2742,14 @@ sko.rel = function(relValue, node, viewModel, cb) {
 sko.plainUri = function(uri) {
     if(uri[0] === "<" && uri[uri.length-1] == ">") {
         return uri.slice(1,uri.length-1);
+    } else if(uri.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null) {
+        uri = uri.slice(1, uri.length-1);
+        resolved = sko.rdf.prefixes.resolve(uri);
+        if(resolved == null) {
+            throw("The CURIE "+uri+" cannot be resolved");
+        } else {
+            return resolved;
+        }
     } else {
         return uri;
     }
@@ -2768,6 +2796,9 @@ sko.Resource = function(resourceId, subject, node) {
     this.valuesMap = {};
     this.subscriptions = [];
     var that = this;
+
+    subject = sko.NTUri(subject);
+
     node.forEach(function(triple){
         sko.log(triple);
         if(triple.object.interfaceName === 'NamedNode') {
@@ -2777,12 +2808,15 @@ sko.Resource = function(resourceId, subject, node) {
             var effectiveValue = sko.effectiveValue(triple.object.valueOf());
             that.valuesMap[triple.predicate.toNT()] = effectiveValue;
             that[triple.predicate.toNT()] = ko.observable(effectiveValue);
+            that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
         } else {
             that.valuesMap[triple.predicate.toNT()] = triple.object.valueOf();
             that[triple.predicate.toNT()] = ko.observable(triple.object.valueOf());
+            that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
         }
     });
     this.about = ko.observable(subject);
+    this['@'] = this.about;
     this.storeObserverFn = sko.Resource.storeObserver(this);
 
     // observe changes in the subject of this resource
@@ -2801,7 +2835,7 @@ sko.Resource = function(resourceId, subject, node) {
 
             // set properties to null
             for(var p in that.valuesMap) {
-                that.valuesMap[p] = null;
+                that.valuesMap[p] = null;                
             }
             for(var p in that.valuesMap) {
                 that[p](null);
@@ -2815,6 +2849,47 @@ sko.Resource = function(resourceId, subject, node) {
     // observe notifications from KO and the RDF store
     sko.Resource.koObserver(this);
     sko.store.startObservingNode(sko.plainUri(this.about()), that.storeObserverFn);
+};
+
+sko.NTUri = function(uri) {
+    if(uri[0]==="[" && uri[uri.length-1]==="]") {
+        uri = uri.slice(1, uri.length-1);
+        resolved = sko.rdf.prefixes.resolve(uri);
+        if(uri == null) {
+            throw("The CURIE "+uri+" cannot be resolved");
+        } else {
+            uri = "<"+resolved+">";
+        }
+    }
+
+    return uri;
+};
+
+/**
+ * helper method for bound accessors
+ */
+sko.Resource.prototype.tryProperty = function(property)  {
+
+    property = sko.NTUri(property);
+
+    if(this[property]!=null) {
+        return this[property];
+    } else {
+
+        if(this.about().indexOf("_:sko") === 0) {
+            this.valuesMap[property] = null;
+            this[property] = ko.observable(null);
+            var that = this;
+            var observerFn = function(newValue){
+                that.valuesMap[property] = newValue;
+            };
+            var subscription = this[property].subscribe(observerFn)
+            this.subscriptions.push(subscription);
+            return this[property];
+        } else {
+            return undefined;
+        }
+    }
 };
  
 /**
@@ -2958,6 +3033,7 @@ sko.Resource.storeObserver = function(skoResource) {
         for(var i=0; i<toCreate.length; i++) {
             sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
             skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
+            skoResource[sko.plainUri(toCreate[i])] = skoResource[triple.predicate.toNT()];
         }
 
         sko.log("*** END MODIFICATION");
@@ -3015,7 +3091,7 @@ sko.traceResources = function(rootNode, model, cb) {
         }
 
         if(about != null) {
-            if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>') {
+            if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
                 about = model[about];
             }
    
@@ -3124,7 +3200,7 @@ sko.traceRelations = function(rootNode, model, cb) {
         }
 
         if(rel != null) {
-            if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>') {
+            if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>' && rel[0] !== '[' && rel[rel.length-1] !== ']') {
                 rel = model[rel];
             }
    
@@ -3198,4 +3274,11 @@ sko.applyBindings = function(node, viewModel, cb) {
         });
     });
 };
+
+/**
+ * Retrieves the resource object active for a node
+ */
+sko.resource = function(jqueryPath) {
+    return sko.currentResource(jQuery(jqueryPath).toArray()[0]);
+}
 })(window);

@@ -38,7 +38,7 @@
 
         <div id='test4'>
           <span about='currentResource'>
-            <p data-bind='text: sko.resource()[propertyToShow()]'></p>
+            <p data-bind='text: sko.current()[propertyToShow()]'></p>
           </span>
         </div>
 
@@ -63,6 +63,107 @@
           </span>
         </div>
 
+        <div id='test8'>
+          <span about='<http://test.com/about1>'>
+            <p id='parent-text' data-bind='text: <http://test.com/title>'></p>
+            <span rel='<http://test.com/related>'>
+              <p id='related-text' data-bind='text: <http://test.com/title>'></p>
+            </span>
+          </span>
+        </div>
+
+        <div id='test9'>
+          <span about='currentResource'>
+            <p id='parent-text9' data-bind='text: <http://test.com/title>'></p>
+            <span rel='relatedToShow'>
+              <p id='related-text9' data-bind='text: <http://test.com/title>'></p>
+            </span>
+          </span>
+        </div>
+
+        <div id='test10'>
+          <span about='currentResource'>
+            <p id='parent-text-10' data-bind='text: <http://test.com/title>'></p>
+            <span rel='relatedToShow'>
+              <p id='related-text-10' data-bind='text: <http://test.com/title>'></p>
+            </span>
+          </span>
+        </div>
+
+        <div id='test11'>
+          <span id='the-resource-11' about='currentResource'>
+            <p id='parent-text-11' data-bind='text: <http://test.com/title>'></p>
+            <span rel='relatedToShow'>
+              <p id='related-text-11' data-bind='text: <http://test.com/title>'></p>
+            </span>
+          </span>
+        </div>
+
+        <div id='test12'>
+          <span id='the-resource-12' about='currentResource'>
+            <input id='text-input-12' data-bind='value: <http://test.com/title>'></input>
+          </span>
+        </div>
+
+        <div id='test13'>
+          <span about='[test:about1]'>
+            <p data-bind='text: [test:title]'></p>
+          </span>
+        </div>
+
+        <div id='test14'>
+          <span about='currentResource'>
+            <p id='parent-text14' data-bind='text: [test:title]'></p>
+            <span rel='relatedToShow'>
+              <p id='related-text14' data-bind='text: [test:title]'></p>
+            </span>
+          </span>
+        </div>
+
+        <script id='test-template15' type='text/html'>
+          {{if selectedTemplate() === '1'}}
+            <span id='the-related-thing-15' rel='[test:related1]'>
+              <p data-bind="text: [test:title]"></p>      
+            </span>    
+          {{else}}
+            <span id='the-related-thing-15' rel='[test:related2]'>
+              <p data-bind="text: [test:title]"></p>      
+            </span>    
+          {{/if}}
+        </script> 
+
+        <div id="test15" about="currentResource">
+          <p data-bind="text: <http://test.com/title>"></p>
+          <span data-bind='template: "test-template15"'></span>
+        </div>
+
+
+        <script id='test-template16' type='text/html'>
+          {{if selectedTemplate() === '1'}}
+            <span id='the-related-thing-16' rel='[test:related1]'>
+              <p data-bind="text: [test:title]"></p>      
+            </span>    
+          {{else}}
+            <span id='the-related-thing-16' rel='[test:related2]'>
+              <p data-bind="text: [test:title]"></p>      
+            </span>    
+          {{/if}}
+        </script> 
+
+        <div id="test16" about="currentResource">
+          <p data-bind="text: <http://test.com/title>"></p>
+          <span data-bind='template: "test-template16"'></span>
+        </div>
+
+        <script id='phiolosophers-template-17' type='text/html'>
+          {{each sko.where("{ ?subject <http://test.com/named> ?o }")()}}
+            <li about='${$value}' data-bind='text:<http://test.com/named>'></li>
+          {{/each}}
+        </script> 
+
+        <div id='test17'>
+          <ul id='philosphers-list' data-bind='template: "phiolosophers-template-17"'></ul>   
+        </div>
 
 </body>
 </html>
