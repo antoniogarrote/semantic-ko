@@ -156,10 +156,12 @@ ko.utils = new (function () {
             return string.substring(0, startsWith.length) === startsWith;
         },
 
-        evalWithinScope: function (expression, scope) {
+        evalWithinScope: function (expression, scope, node) {
             // Always do the evaling within a "new Function" to block access to parent scope
             if (scope === undefined)
                 return (new Function("return " + expression))();
+
+            scope['skonode'] = node;
                 
             // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
             // the variable name "expression" itself will clash with a subproperty called "expression"

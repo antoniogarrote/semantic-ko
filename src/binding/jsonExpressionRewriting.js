@@ -112,15 +112,15 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; " + value + " = __ko_value; }");
                     }
                 }
                 if(!isFirst)  {
@@ -129,15 +129,15 @@ ko.jsonExpressionRewriting = (function () {
                     isFirst = false;
                 }
                 if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
                 } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
                 } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": sko.rdf.prefixes.resolve('"+value.slice(1,value.length-1)+"')";
                 } else {
-                    readers = readers+key+": "+value;
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return "+value+" })()";
                 }
             }
 

@@ -3,10 +3,10 @@
     var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
-    function parseBindingAttribute(attributeText, viewModel) {
+    function parseBindingAttribute(attributeText, viewModel, node) {
         try {
             var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
-            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel);
+            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, node);
         } catch (ex) {
             throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
@@ -37,13 +37,16 @@
         new ko.dependentObservable(
             function () {
 
-                // add the current node to the view model
-                sko.current = function() {
-                    return sko.currentResource(node);
-                };
 
-                var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
+                var evaluatedBindings;
+                if(typeof(bindings) == 'function') {
+                    viewModel['skonode'] = node;
+                    with(viewModel){ evaluatedBindings =  bindings() };
+                } else {
+                    evaluatedBindings = bindings;
+                }
+
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, node);
 
 
                 // First run all the inits, so bindings can register for notification on changes

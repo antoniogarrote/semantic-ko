@@ -172,10 +172,12 @@ ko.utils = new (function () {
             return string.substring(0, startsWith.length) === startsWith;
         },
 
-        evalWithinScope: function (expression, scope) {
+        evalWithinScope: function (expression, scope, node) {
             // Always do the evaling within a "new Function" to block access to parent scope
             if (scope === undefined)
                 return (new Function("return " + expression))();
+
+            scope['skonode'] = node;
                 
             // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
             // the variable name "expression" itself will clash with a subproperty called "expression"
@@ -1233,15 +1235,15 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; " + value + " = __ko_value; }");
                     }
                 }
                 if(!isFirst)  {
@@ -1250,15 +1252,15 @@ ko.jsonExpressionRewriting = (function () {
                     isFirst = false;
                 }
                 if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
                 } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": sko.current().tryProperty('"+value+"')";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
                 } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
                 } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": sko.rdf.prefixes.resolve('"+value.slice(1,value.length-1)+"')";
                 } else {
-                    readers = readers+key+": "+value;
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return "+value+" })()";
                 }
             }
 
@@ -1284,10 +1286,10 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
     var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
-    function parseBindingAttribute(attributeText, viewModel) {
+    function parseBindingAttribute(attributeText, viewModel, node) {
         try {
             var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
-            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel);
+            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, node);
         } catch (ex) {
             throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
@@ -1318,13 +1320,16 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
         new ko.dependentObservable(
             function () {
 
-                // add the current node to the view model
-                sko.current = function() {
-                    return sko.currentResource(node);
-                };
 
-                var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
+                var evaluatedBindings;
+                if(typeof(bindings) == 'function') {
+                    viewModel['skonode'] = node;
+                    with(viewModel){ evaluatedBindings =  bindings() };
+                } else {
+                    evaluatedBindings = bindings;
+                }
+
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, node);
 
 
                 // First run all the inits, so bindings can register for notification on changes
@@ -2824,7 +2829,7 @@ sko.Resource = function(resourceId, subject, node) {
     var subscription = this.about.subscribe(function(newUri){
         sko.log("SKO Resource new resource:"+newUri);
 
-        sko.log("*** STOP OBSERVING NODE STORE FOR "+that.about());
+        sko.log("*** STOP OBSERVING NODE STORE");
         sko.store.stopObservingNode(that.storeObserverFn);
 
         if(newUri != null && newUri.indexOf("_:sko")!=0) {
@@ -2975,7 +2980,7 @@ sko.Resource.koObserver = function(skoResource) {
 sko.Resource.storeObserver = function(skoResource) {
     return function(node)  {
         sko.log("*** received notification change from STORE in resource "+skoResource.about());
-        if(skoResource.about()==="_:sko_10") {
+        if(skoResource.about().indexOf("_:sko")===0) {
             return;
         }
         var newValues = {};
@@ -3033,7 +3038,7 @@ sko.Resource.storeObserver = function(skoResource) {
         for(var i=0; i<toCreate.length; i++) {
             sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
             skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
-            skoResource[sko.plainUri(toCreate[i])] = skoResource[triple.predicate.toNT()];
+            skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
         }
 
         sko.log("*** END MODIFICATION");
@@ -3090,7 +3095,7 @@ sko.traceResources = function(rootNode, model, cb) {
             }
         }
 
-        if(about != null) {
+        if(about != null && about != '') {
             if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
                 about = model[about];
             }
@@ -3199,7 +3204,7 @@ sko.traceRelations = function(rootNode, model, cb) {
             }
         }
 
-        if(rel != null) {
+        if(rel != null && rel != '') {
             if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>' && rel[0] !== '[' && rel[rel.length-1] !== ']') {
                 rel = model[rel];
             }

@@ -385,6 +385,7 @@ asyncTest('rendering template',function(){
 
     jQuery(document).ready(function(){
         sko.ready(function(){
+            //sko.activeDebug = true;
             sko.rdf.prefixes.set("test", "http://test.com/");
             sko.store.execute(testData, function(success, result){
                 ok(success);
@@ -403,7 +404,6 @@ asyncTest('rendering template',function(){
         });
     });
 });
-
 
 asyncTest('changing resource rendered with template',function(){
     var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' . \

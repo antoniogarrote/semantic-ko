@@ -123,17 +123,17 @@
         <script id='test-template15' type='text/html'>
           {{if selectedTemplate() === '1'}}
             <span id='the-related-thing-15' rel='[test:related1]'>
-              <p data-bind="text: [test:title]"></p>      
+              <p a='1' data-bind="text: [test:title]"></p>      
             </span>    
           {{else}}
             <span id='the-related-thing-15' rel='[test:related2]'>
-              <p data-bind="text: [test:title]"></p>      
+              <p b='2' data-bind="text: [test:title]"></p>      
             </span>    
           {{/if}}
         </script> 
 
         <div id="test15" about="currentResource">
-          <p data-bind="text: <http://test.com/title>"></p>
+          <p c='3' data-bind="text: <http://test.com/title>"></p>
           <span data-bind='template: "test-template15"'></span>
         </div>
 

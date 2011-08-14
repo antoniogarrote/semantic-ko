@@ -520,7 +520,7 @@ sko.Resource = function(resourceId, subject, node) {
     var subscription = this.about.subscribe(function(newUri){
         sko.log("SKO Resource new resource:"+newUri);
 
-        sko.log("*** STOP OBSERVING NODE STORE FOR "+that.about());
+        sko.log("*** STOP OBSERVING NODE STORE");
         sko.store.stopObservingNode(that.storeObserverFn);
 
         if(newUri != null && newUri.indexOf("_:sko")!=0) {
@@ -671,7 +671,7 @@ sko.Resource.koObserver = function(skoResource) {
 sko.Resource.storeObserver = function(skoResource) {
     return function(node)  {
         sko.log("*** received notification change from STORE in resource "+skoResource.about());
-        if(skoResource.about()==="_:sko_10") {
+        if(skoResource.about().indexOf("_:sko")===0) {
             return;
         }
         var newValues = {};
@@ -729,7 +729,7 @@ sko.Resource.storeObserver = function(skoResource) {
         for(var i=0; i<toCreate.length; i++) {
             sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
             skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
-            skoResource[sko.plainUri(toCreate[i])] = skoResource[triple.predicate.toNT()];
+            skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
         }
 
         sko.log("*** END MODIFICATION");
@@ -786,7 +786,7 @@ sko.traceResources = function(rootNode, model, cb) {
             }
         }
 
-        if(about != null) {
+        if(about != null && about != '') {
             if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
                 about = model[about];
             }
@@ -895,7 +895,7 @@ sko.traceRelations = function(rootNode, model, cb) {
             }
         }
 
-        if(rel != null) {
+        if(rel != null && rel != '') {
             if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>' && rel[0] !== '[' && rel[rel.length-1] !== ']') {
                 rel = model[rel];
             }
