@@ -476,3 +476,47 @@ asyncTest('generator where',function(){
     });
 });
 
+asyncTest('testing simple binding with model and language',function(){
+    var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource'@en .\
+                                  <http://test.com/about1> <http://test.com/title> 'un recurso'@es }";
+    var viewModel = {'currentResource': '<http://test.com/about1>'};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.defaultLanguage = ko.observable("es");
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test18', viewModel, function(){
+                    ok(jQuery("#test18 p").text() === 'un recurso');
+                    // clean up
+                    jQuery("#test18").remove();
+                    sko.defaultLanguage(null);
+                    start();
+                });
+            });
+        });
+    });
+});
+
+asyncTest('testing simple binding with model and language 2',function(){
+    var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource'@en .\
+                                  <http://test.com/about1> <http://test.com/title> 'un recurso' }";
+    var viewModel = {'currentResource': '<http://test.com/about1>'};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.defaultLanguage = ko.observable(null);
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test19', viewModel, function(){
+                    ok(jQuery("#test19 p").text() === 'un recurso');
+                    // clean up
+                    jQuery("#test19").remove();
+                    sko.defaultLanguage(null);
+                    start();
+                });
+            });
+        });
+    });
+});
+

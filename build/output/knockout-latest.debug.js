@@ -2796,11 +2796,20 @@ sko.effectiveValue = function(term) {
     }
 };
 
+
+sko.defaultLanguage = ko.observable(null);
+
 sko.Resource = function(resourceId, subject, node) {
     this.resourceId = resourceId;
     this.valuesMap = {};
     this.subscriptions = [];
-    var that = this;
+    this.literalLangs = {};
+    var that = this
+    
+    // default language for literals
+    this.defaultLanguage = ko.dependentObservable(function(){
+        return sko.defaultLanguage();
+    });
 
     subject = sko.NTUri(subject);
 
@@ -2810,10 +2819,28 @@ sko.Resource = function(resourceId, subject, node) {
             that.valuesMap[triple.predicate.toNT()] = triple.object.toNT();
             that[triple.predicate.toNT()] = ko.observable(triple.object.toNT());
         } else if(triple.object.interfaceName === 'Literal') {
-            var effectiveValue = sko.effectiveValue(triple.object.valueOf());
-            that.valuesMap[triple.predicate.toNT()] = effectiveValue;
-            that[triple.predicate.toNT()] = ko.observable(effectiveValue);
-            that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+            console.log("HEY -> "+that.defaultLanguage());
+            if(that.defaultLanguage() != null) {
+                console.log(1);
+                console.log(triple.object.toString())
+                console.log("-----");
+                if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == that.defaultLanguage()) {
+                    var effectiveValue = sko.effectiveValue(triple.object.valueOf());
+                    that.valuesMap[triple.predicate.toNT()] = effectiveValue;
+                    that[triple.predicate.toNT()] = ko.observable(effectiveValue);
+                    that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+                    that.literalLangs[triple.predicate.toNT()] = triple.object.language;
+                }
+            } else {
+                console.log(2);
+                if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == null) {
+                    var effectiveValue = sko.effectiveValue(triple.object.valueOf());
+                    that.valuesMap[triple.predicate.toNT()] = effectiveValue;
+                    that[triple.predicate.toNT()] = ko.observable(effectiveValue);
+                    that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+                    that.literalLangs[triple.predicate.toNT()] = triple.object.language;
+                }
+            }
         } else {
             that.valuesMap[triple.predicate.toNT()] = triple.object.valueOf();
             that[triple.predicate.toNT()] = ko.observable(triple.object.valueOf());
@@ -2909,11 +2936,18 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
     } else {
         if(this.valuesMap[property] !== newValue && !sko.isSKOBlankNode(newValue)) {
             // property is already present and the value has changed -> update
-            
+            var oldValue = '"'+this.valuesMap[property]+'"';
+            newValue = '"'+newValue+'"';
+
+            if(this.literalLangs[property] != null) {
+                oldValue = oldValue+"@"+this.literalLangs[property];
+                newValue = newValue+"@"+this.literalLangs[property];                
+            }
+
             //@todo something must be done with datatypes and literals
-            var query = "DELETE { "+this.about()+" "+property+" \""+this.valuesMap[property]+"\" }";
-            query = query + " INSERT { "+this.about()+" "+property+" \""+newValue+"\" }";
-            query = query + " WHERE { "+this.about()+" "+property+" \""+this.valuesMap[property]+"\" }"; 
+            var query = "DELETE { "+this.about()+" "+property+" "+oldValue+" }";
+            query = query + " INSERT { "+this.about()+" "+property+" "+newValue+" }";
+            query = query + " WHERE { "+this.about()+" "+property+" "+oldValue+" }"; 
 
             query = query.replace(/"</g,"<").replace(/>"/g,">");
 
@@ -2984,6 +3018,7 @@ sko.Resource.storeObserver = function(skoResource) {
             return;
         }
         var newValues = {};
+        var newValuesLangs = {};
 
         sko.log("*** triples in STORE resource -> "+node.toArray().length);
 
@@ -2992,8 +3027,19 @@ sko.Resource.storeObserver = function(skoResource) {
                 sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
                 newValues[triple.predicate.toNT()] = triple.object.toNT();
             } else {
-                sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
-                newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                if(skoResource.defaultLanguage() != null) {
+                    if(newValues[triple.predicate.toNT()] == null || triple.object.language == skoResource.defaultLanguage()) {
+                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+                    }
+                } else {
+                    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
+                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+                    }
+                }
             }
         });
 
@@ -3008,9 +3054,13 @@ sko.Resource.storeObserver = function(skoResource) {
                 newValueMap[p] = newValues[p];
                 if(skoResource.valuesMap[p] !== newValues[p]) {
                     toUpdate.push(p);
+                    if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
+                        skoResource.literalLangs[p] = newValuesLangs[p];
+                    }
                 }
             } else {
                 toNullify.push(p);
+                delete skoResource.literalLangs[p];
             }
         }
 
@@ -3019,6 +3069,7 @@ sko.Resource.storeObserver = function(skoResource) {
             if(skoResource.valuesMap[p] == null) {
                 toCreate.push(p);
                 newValueMap[p] = newValues[p];
+                skoResource.literalLangs[p] = newValuesLangs[p];
             }
         }
 
