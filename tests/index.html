@@ -177,5 +177,30 @@
           </span>
         </div>
 
+        <div id='test20'>
+          <span about='currentResource'>
+            <p data-bind='text: "GOT:"+sko.current().tryProperty("<http://test.com/title>")()'></p>
+          </span>
+        </div>
+
+        <div id='test21'>
+          <span about='currentResource'>
+            <p data-bind='text: "GOT:"+computedTitle()'></p>
+          </span>
+        </div>
+
+        <div id='test23'>
+          <span about='currentResource'>
+            <p data-bind='text: sko.current().computedName()'></p>
+          </span>
+        </div>
+
+        <div id='test24'>
+          <span about='currentResource'>
+            <p id='test24prop1' data-bind='text: sko.current().computedName()'></p>
+            <a id='test24prop2' data-bind='attr: {href: sko.current().computedTopic()}'>click me</a>
+          </span>
+        </div>
+
 </body>
 </html>

@@ -520,3 +520,122 @@ asyncTest('testing simple binding with model and language 2',function(){
     });
 });
 
+asyncTest('testing decorated property',function(){
+    var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' .\
+                                  <http://test.com/about2> <http://test.com/title> 'another resource'}";
+    var viewModel = {'currentResource': ko.observable('<http://test.com/about1>')};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.rdf.prefixes.set("test", "http://test.com/");
+            sko.defaultLanguage = ko.observable(null);
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test20', viewModel, function(){
+                    ok(jQuery("#test20 p").text() === 'GOT:a resource');
+
+                    viewModel.currentResource("<http://test.com/about2>");
+                    ok(jQuery("#test20 p").text() === 'GOT:another resource');
+                    // clean up
+                    jQuery("#test20").remove();
+                    sko.defaultLanguage(null);
+                    start();
+                });
+            });
+        });
+    });
+});
+
+
+asyncTest('testing decorated property 2',function(){
+    var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' .\
+                                  <http://test.com/about2> <http://test.com/title> 'another resource'}";
+    var viewModel = {'currentResource': ko.observable('<http://test.com/about1>'),
+                     'computedTitle': function() { return sko.current().prop("[test:title]")() }};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.rdf.prefixes.set("test", "http://test.com/");
+            sko.defaultLanguage = ko.observable(null);
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test21', viewModel, function(){
+                    ok(jQuery("#test21 p").text() === 'GOT:a resource');
+
+                    viewModel.currentResource("<http://test.com/about2>");
+                    ok(jQuery("#test21 p").text() === 'GOT:another resource');
+                    // clean up
+                    jQuery("#test21").remove();
+                    sko.defaultLanguage(null);
+                    start();
+                });
+            });
+        });
+    });
+});
+
+
+asyncTest('testing classes registry', function() {
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.Class.define("[foaf:Person]",
+                             {'decoratedName': function(){ return 'testDecoratedName' },
+                              'plainPersonProperty': 'testPerson',
+                              'thisFunction':  function(){ return this.plainProperty  },
+                              'extended'    :function() { this.extendedTest = true }  });
+
+            var test = {'plainProperty': 'test',
+                        'plainFunction': function() { return 'plainFunction' } };
+
+            var instance = sko.Class.instance("[foaf:Person]", test);
+            var instance2 = sko.Class.instance("[foaf:Person]", {});
+
+            instance2.plainPersonProperty = 'test2';
+            ok(instance.decoratedName() === 'testDecoratedName');
+            ok(instance.plainFunction() === 'plainFunction');
+            ok(instance.plainProperty === 'test');
+            ok(instance2.plainProperty == null);
+            ok(instance.thisFunction() === 'test');
+            ok(instance2.thisFunction() == null);
+            ok(instance.plainPersonProperty === 'testPerson');
+            ok(instance2.plainPersonProperty === 'test2');
+            ok(instance.extendedTest === true);
+            ok(instance2.extendedTest === true);
+            start();
+        });
+    });
+});
+
+
+asyncTest('testing classes registry 2', function() {
+    var testData = "INSERT DATA { <http://test.com/about1> a <http://xmlns.com/foaf/0.1/Person> .\
+                                  <http://test.com/about1> <http://xmlns.com/foaf/0.1/name> 'Juan'.\
+                                  <http://test.com/about1> a <http://test.com/TestClass>.\
+                                  <http://test.com/about1> <http://xmlns.com/foaf/0.1/primaryTopic> <http://en.wikipedia.org/wiki/Juan_Castillo>}";
+    var viewModel = {'currentResource': ko.observable('<http://test.com/about1>')};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.rdf.prefixes.set("test", "http://test.com/");
+            sko.Class.define("ObjectIntersectionOf([foaf:Person],[test:TestClass])",
+                             {'computedName': function(){ return 'mr. ' + this.getProp("[foaf:name]") } });
+
+            sko.Class.define("ObjectSomeValuesFrom([foaf:primaryTopic])",
+                             {'computedTopic': function(){ return sko.plainUri(this.getProp("[foaf:primaryTopic]")) } });
+
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test24', viewModel, function(){
+                    ok(jQuery("#test24prop1").text() === 'mr. Juan');
+                    console.log(jQuery("#test24prop2").attr('href'));
+                    ok(jQuery("#test24prop2").attr('href') === 'http://en.wikipedia.org/wiki/Juan_Castillo');
+                    
+                    // clean up
+                    jQuery("#test24").remove();
+
+                    start();
+                });
+            });
+        });
+    });
+});

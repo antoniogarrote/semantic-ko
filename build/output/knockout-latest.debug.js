@@ -2345,6 +2345,92 @@ sko.log = function(msg) {
     }
 };
 
+
+/**
+ * Manipulate prototypes for RDFS classes
+ */
+sko.Class = {};
+sko.Class.Clone = function() {};
+sko.Class.registry = {};
+sko.Class.define = function(classExpression, object) {
+    sko.Class.registry[sko.NTUri(classExpression.replace(/\s*/g,""))] = object;
+};
+
+sko.Class.instance = function() {
+    var classUri = sko.NTUri(arguments[0]);
+    var base = arguments[1] || {};
+
+    var classPrototype = sko.Class.registry[classUri];
+    sko.Class.Clone.prototype = classPrototype;
+    var clone = new sko.Class.Clone();
+
+    base.extended = null;
+
+    for(var p in clone) {
+        if(base[p] == null) {
+            base[p] = clone[p];
+        }
+    }
+    if(base.extended) {
+        base.extended();
+    }
+
+    return base;    
+};
+
+sko.Class.check = function(resource) {
+    var newClasses = {};
+    var isFirstRun = arguments[1] || false;
+
+    for(var p in sko.Class.registry) {
+        console.log("*** IS INSTANCE OF? "+p);
+        if(sko.Class.isInstance(resource, p)) {
+            console.log("Y!");
+            newClasses[p] = true;
+            if(isFirstRun || resource.classes[p] == null) {
+                sko.Class.instance(p,resource)
+            }
+        } else {
+            console.log("N!");
+            if(resource.classes[p] != null) {
+                for(var m in resource.classes[p]) {
+                    // @todo 
+                    // check if it is an observer and 
+                    // then set the value to null
+                    resource[m] = undefined;
+                }
+            }
+        }
+    }
+
+    resource.classes = newClasses;
+};
+
+sko.Class.isInstance = function(resource, klass) {
+    if(klass.indexOf("ObjectIntersectionOf(") === 0) {
+        var parts = klass.slice(0,klass.length-1).split("ObjectIntersectionOf(")[1].split(",");
+        for(var i=0; i<parts.length; i++) {
+            if(!sko.Class.isInstance(resource, parts[i])) {
+                return false;
+            }
+        }
+        return true;
+    } else if(klass.indexOf("ObjectUnionOf(") === 0) {
+        var parts = klass.slice(0,klass.length-1).split("ObjectUnionOf(")[1].split(",");
+        for(var i=0; i<parts.length; i++) {
+            if(!sko.Class.isInstance(resource, parts[i])) {
+                return true;
+            }
+        }
+        return false;
+    } else if(klass.indexOf("ObjectSomeValuesFrom(") === 0) {
+        var propertyUri = klass.slice(0,klass.length-1).split("ObjectSomeValuesFrom(")[1];
+        return resource.valuesMap[sko.NTUri(propertyUri)] != null
+    } else {
+        return resource.classes[sko.NTUri(klass)] === true;
+    }
+};
+
 /**
  * Starts the library. Call this before anything else.
  */
@@ -2353,6 +2439,7 @@ sko.ready = function()  {
     // reset state
     sko.aboutResourceMap = {};
     sko.aboutResourceSubscriptionMap = {};
+    sko.Class.registry = {};
     sko.aboutCounter = 0;
     sko.generatorId = 0;
     sko.generatorsMap = {};
@@ -2409,7 +2496,7 @@ sko.about = function(aboutValue, viewModel, cb) {
         }
 
         if(typeof(aboutValue) === 'string') {
-        // the value is aconstant URI
+            // the value is aconstant URI
 
             var uri = aboutValue;
 
@@ -2424,7 +2511,7 @@ sko.about = function(aboutValue, viewModel, cb) {
                     sko.aboutResourceMap[nextId] = new sko.Resource(nextId, uri,resource);
                     // id -> observer
                     sko.about[nextId] = ko.observable(uri);
-     
+                    
                     // we observe changes in the about resource
                     var subscription = sko.about[nextId].subscribe(function(nextUri) {
                         sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
@@ -2455,7 +2542,7 @@ sko.about = function(aboutValue, viewModel, cb) {
                 cb(nextId);
             });
         } else {
-        // The value is a function (maybe an observer)
+            // The value is a function (maybe an observer)
 
             sko.about[nextId] = ko.dependentObservable({
                 read: function(){
@@ -2487,7 +2574,7 @@ sko.about = function(aboutValue, viewModel, cb) {
                     // id -> Resource
                     sko.log(" ------------> "+nextId+" : "+resource+" 4");
                     sko.aboutResourceMap[nextId] = new sko.Resource(nextId, sko.about[nextId](), resource);
-     
+                    
                     // we observe changes in the about resource
                     var subscription = sko.about[nextId].subscribe(function(nextUri) {
                         sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
@@ -2668,7 +2755,7 @@ sko.rel = function(relValue, node, viewModel, cb) {
                     sko.log("*** Found parent resource: "+resource.about());
                     if(resource[uri]) {
                         var relResourceUri = resource[uri]();
-                    
+                        
                         sko.log("*** found related resource: "+relResourceUri);
                         // register the new observer and resource
                         sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
@@ -2765,37 +2852,36 @@ sko.effectiveValue = function(term) {
         return null;
     } else {
         if(term.interfaceName && term.interfaceName === 'Literal') {
-          if(term.datatype == "http://www.w3.org/2001/XMLSchema#integer" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#decimal" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#double" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#long" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#int" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#short" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#byte" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-             term.datatype == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
-              return parseFloat(term.valueOf());
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
-              return (term.valueOf() === 'true' || term.valueOf() === true || term.valueOf() === 'True');
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
-              return term.valueOf();
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
-              return new Date(term.valueOf());
-          } else if(term.type == null) {
-              return term.valueOf();
-          }
+            if(term.datatype == "http://www.w3.org/2001/XMLSchema#integer" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#decimal" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#double" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#long" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#int" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#short" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#byte" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+                return parseFloat(term.valueOf());
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
+                return (term.valueOf() === 'true' || term.valueOf() === true || term.valueOf() === 'True');
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
+                return term.valueOf();
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
+                return new Date(term.valueOf());
+            } else if(term.type == null) {
+                return term.valueOf();
+            }
         } else {
             return term.valueOf();
         }
     }
 };
-
 
 sko.defaultLanguage = ko.observable(null);
 
@@ -2804,6 +2890,10 @@ sko.Resource = function(resourceId, subject, node) {
     this.valuesMap = {};
     this.subscriptions = [];
     this.literalLangs = {};
+
+    // classes this object is instance of
+    this.classes = {};
+
     var that = this
     
     // default language for literals
@@ -2813,17 +2903,20 @@ sko.Resource = function(resourceId, subject, node) {
 
     subject = sko.NTUri(subject);
 
+    
+
     node.forEach(function(triple){
         sko.log(triple);
+        if(triple.predicate.toNT() === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>") {
+            console.log(" found resource class "+triple.object.toNT());
+            that.classes[triple.object.toNT()] = true;
+        };
+
         if(triple.object.interfaceName === 'NamedNode') {
             that.valuesMap[triple.predicate.toNT()] = triple.object.toNT();
             that[triple.predicate.toNT()] = ko.observable(triple.object.toNT());
         } else if(triple.object.interfaceName === 'Literal') {
-            console.log("HEY -> "+that.defaultLanguage());
             if(that.defaultLanguage() != null) {
-                console.log(1);
-                console.log(triple.object.toString())
-                console.log("-----");
                 if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == that.defaultLanguage()) {
                     var effectiveValue = sko.effectiveValue(triple.object.valueOf());
                     that.valuesMap[triple.predicate.toNT()] = effectiveValue;
@@ -2832,7 +2925,6 @@ sko.Resource = function(resourceId, subject, node) {
                     that.literalLangs[triple.predicate.toNT()] = triple.object.language;
                 }
             } else {
-                console.log(2);
                 if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == null) {
                     var effectiveValue = sko.effectiveValue(triple.object.valueOf());
                     that.valuesMap[triple.predicate.toNT()] = effectiveValue;
@@ -2850,6 +2942,9 @@ sko.Resource = function(resourceId, subject, node) {
     this.about = ko.observable(subject);
     this['@'] = this.about;
     this.storeObserverFn = sko.Resource.storeObserver(this);
+
+    // setup classes
+    sko.Class.check(this, true);
 
     // observe changes in the subject of this resource
     var that = this;
@@ -2882,6 +2977,7 @@ sko.Resource = function(resourceId, subject, node) {
     sko.Resource.koObserver(this);
     sko.store.startObservingNode(sko.plainUri(this.about()), that.storeObserverFn);
 };
+
 
 sko.NTUri = function(uri) {
     if(uri[0]==="[" && uri[uri.length-1]==="]") {
@@ -2923,7 +3019,20 @@ sko.Resource.prototype.tryProperty = function(property)  {
         }
     }
 };
- 
+
+sko.Resource.prototype.prop = function(property)  {
+    return this.tryProperty(property) ;
+} 
+
+sko.Resource.prototype.getProp = function(property)  {
+    return this.tryProperty(property)() ;
+} 
+
+sko.Resource.prototype.setProp = function(property, newValue)  {
+    return this.tryProperty(property)(newValue) ;
+} 
+
+
 /**
  * Must update the value in the RDFstore
  */
@@ -3091,6 +3200,9 @@ sko.Resource.storeObserver = function(skoResource) {
             skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
             skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
         }
+        
+        // setup classes
+        sko.Class.check(skoResource);
 
         sko.log("*** END MODIFICATION");
     };    
@@ -3150,7 +3262,7 @@ sko.traceResources = function(rootNode, model, cb) {
             if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
                 about = model[about];
             }
-   
+            
             sko.about(about, model, function(aboutId) {
                 jQuery(node).attr('aboutId',aboutId);
                 k(registerFn,env);
@@ -3259,7 +3371,7 @@ sko.traceRelations = function(rootNode, model, cb) {
             if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>' && rel[0] !== '[' && rel[rel.length-1] !== ']') {
                 rel = model[rel];
             }
-   
+            
             var nextId = jQuery(node).attr("aboutId");
             if(nextId == null) {
                 sko.log("*** CREATING RELATED NODE");
@@ -3337,4 +3449,7 @@ sko.applyBindings = function(node, viewModel, cb) {
 sko.resource = function(jqueryPath) {
     return sko.currentResource(jQuery(jqueryPath).toArray()[0]);
 }
+
+// place holder for the parser
+sko.owl = {};
 })(window);
