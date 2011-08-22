@@ -70,37 +70,40 @@ sko.Class.instance = function() {
 };
 
 sko.Class.check = function(resource) {
-    var newClasses = {};
+    //var newClasses = {};
     var isFirstRun = arguments[1] || false;
 
     for(var p in sko.Class.registry) {
-        console.log("*** IS INSTANCE OF? "+p);
+        sko.log("*** IS INSTANCE OF? "+p);
         if(sko.Class.isInstance(resource, p)) {
-            console.log("Y!");
-            newClasses[p] = true;
+            sko.log("Y!");
+            //newClasses[p] = true;
+            resource.classes[p] = true;
             if(isFirstRun || resource.classes[p] == null) {
                 sko.Class.instance(p,resource)
             }
         } else {
-            console.log("N!");
+            sko.log("N!");
             if(resource.classes[p] != null) {
-                for(var m in resource.classes[p]) {
+                delete resource.classes[p];
+                for(var m in sko.Class.registry[p]) {
                     // @todo 
                     // check if it is an observer and 
                     // then set the value to null
-                    resource[m] = undefined;
+                    delete resource[m];
                 }
             }
         }
     }
 
-    resource.classes = newClasses;
+    //resource.classes = newClasses;
 };
 
 sko.Class.isInstance = function(resource, klass) {
     if(klass.indexOf("ObjectIntersectionOf(") === 0) {
         var parts = klass.slice(0,klass.length-1).split("ObjectIntersectionOf(")[1].split(",");
         for(var i=0; i<parts.length; i++) {
+            sko.log("INTERSECTION CHECKING "+parts[i]);
             if(!sko.Class.isInstance(resource, parts[i])) {
                 return false;
             }
@@ -109,15 +112,25 @@ sko.Class.isInstance = function(resource, klass) {
     } else if(klass.indexOf("ObjectUnionOf(") === 0) {
         var parts = klass.slice(0,klass.length-1).split("ObjectUnionOf(")[1].split(",");
         for(var i=0; i<parts.length; i++) {
-            if(!sko.Class.isInstance(resource, parts[i])) {
+            if(sko.Class.isInstance(resource, parts[i])) {
                 return true;
             }
         }
         return false;
     } else if(klass.indexOf("ObjectSomeValuesFrom(") === 0) {
         var propertyUri = klass.slice(0,klass.length-1).split("ObjectSomeValuesFrom(")[1];
+        sko.log("CHECKIN CLASS URI: "+sko.NTUri(propertyUri));
+        for(var p in resource.valuesMap) {
+            sko.log(" - "+p+" ---> "+resource.valuesMap[sko.NTUri(propertyUri)]);
+        }
         return resource.valuesMap[sko.NTUri(propertyUri)] != null
     } else {
+        sko.log("CHECKIN CLASS URI: "+sko.NTUri(klass));
+        sko.log(resource);
+        for(var p in resource.classes) {
+            sko.log(" - "+p+" ---> "+resource.classes[p]);
+        }
+
         return resource.classes[sko.NTUri(klass)] === true;
     }
 };
@@ -599,7 +612,7 @@ sko.Resource = function(resourceId, subject, node) {
     node.forEach(function(triple){
         sko.log(triple);
         if(triple.predicate.toNT() === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>") {
-            console.log(" found resource class "+triple.object.toNT());
+            sko.log(" found resource class "+triple.object.toNT());
             that.classes[triple.object.toNT()] = true;
         };
 

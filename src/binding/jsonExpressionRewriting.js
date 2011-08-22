@@ -33,13 +33,13 @@ ko.jsonExpressionRewriting = (function () {
                     switch (c) {
                         case '"':
                         case "'":
-                        case "<":
-                            tokenStart = position;
-                            tokenEndChar = ">";
-                            break;
                         case "/":
                             tokenStart = position;
                             tokenEndChar = c;
+                            break;
+                        case "<":
+                            tokenStart = position;
+                            tokenEndChar = ">";
                             break;
                         case "{":
                             tokenStart = position;
