@@ -38,10 +38,11 @@
             function () {
 
 
-                var evaluatedBindings;
+                var evaluatedBindings, bindingsToBeEvaluated;
                 if(typeof(bindings) == 'function') {
                     viewModel['skonode'] = node;
-                    with(viewModel){ evaluatedBindings =  bindings() };
+                    bindingsToBeEvaluated = bindings;
+                    with(viewModel){ evaluatedBindings =  bindingsToBeEvaluated() };
                 } else {
                     evaluatedBindings = bindings;
                 }

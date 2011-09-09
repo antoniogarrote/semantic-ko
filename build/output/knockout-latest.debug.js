@@ -1321,10 +1321,11 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
             function () {
 
 
-                var evaluatedBindings;
+                var evaluatedBindings, bindingsToBeEvaluated;
                 if(typeof(bindings) == 'function') {
                     viewModel['skonode'] = node;
-                    with(viewModel){ evaluatedBindings =  bindings() };
+                    bindingsToBeEvaluated = bindings;
+                    with(viewModel){ evaluatedBindings =  bindingsToBeEvaluated() };
                 } else {
                     evaluatedBindings = bindings;
                 }
@@ -2386,11 +2387,10 @@ sko.Class.check = function(resource) {
         sko.log("*** IS INSTANCE OF? "+p);
         if(sko.Class.isInstance(resource, p)) {
             sko.log("Y!");
-            //newClasses[p] = true;
-            resource.classes[p] = true;
             if(isFirstRun || resource.classes[p] == null) {
                 sko.Class.instance(p,resource)
             }
+            resource.classes[p] = true;
         } else {
             sko.log("N!");
             if(resource.classes[p] != null) {

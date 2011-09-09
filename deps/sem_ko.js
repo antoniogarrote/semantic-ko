@@ -77,11 +77,10 @@ sko.Class.check = function(resource) {
         sko.log("*** IS INSTANCE OF? "+p);
         if(sko.Class.isInstance(resource, p)) {
             sko.log("Y!");
-            //newClasses[p] = true;
-            resource.classes[p] = true;
             if(isFirstRun || resource.classes[p] == null) {
                 sko.Class.instance(p,resource)
             }
+            resource.classes[p] = true;
         } else {
             sko.log("N!");
             if(resource.classes[p] != null) {
