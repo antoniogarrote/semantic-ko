@@ -639,3 +639,4 @@ asyncTest('testing classes registry 2', function() {
         });
     });
 });
+

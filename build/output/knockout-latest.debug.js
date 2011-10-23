@@ -625,10 +625,15 @@ ko.memoization = (function () {
                 var combinedParams = [node];
                 if (extraCallbackParamsArray)
                     ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
-                ko.memoization.unmemoize(memos[i].memoId, combinedParams);
-                node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
-                if (node.parentNode)
-                    node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)
+
+                sko.traceResources(domNode, combinedParams, function(){
+                    sko.traceRelations(domNode, combinedParams, function(){
+                        ko.memoization.unmemoize(memos[i].memoId, combinedParams);
+                        node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
+                        if (node.parentNode)
+                            node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)
+                    });
+                });
             }
         },
 
