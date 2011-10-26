@@ -284,8 +284,6 @@ asyncTest('changing related of related',function(){
 
                     sko.store.execute("SELECT ?o WHERE { <http://test.com/about1> <http://test.com/related> ?o}", 
                                       function(success, results){
-                                          console.log("here");
-                                          console.log(results);
                                           ok(results.length===1);
                                           ok(results[0].o.value === "http://test.com/about4");
                                           jQuery("#test11").remove();
@@ -627,7 +625,6 @@ asyncTest('testing classes registry 2', function() {
                 ok(success);
                 sko.applyBindings('#test24', viewModel, function(){
                     ok(jQuery("#test24prop1").text() === 'mr. Juan');
-                    console.log(jQuery("#test24prop2").attr('href'));
                     ok(jQuery("#test24prop2").attr('href') === 'http://en.wikipedia.org/wiki/Juan_Castillo');
                     
                     // clean up
@@ -640,3 +637,33 @@ asyncTest('testing classes registry 2', function() {
     });
 });
 
+asyncTest('testing additional properties', function() {
+    var testData = "INSERT DATA { <http://test.com/about1> a <http://xmlns.com/foaf/0.1/Person> .\
+                                  <http://test.com/about1> <http://xmlns.com/foaf/0.1/name> 'Juan' }";
+    var viewModel = {'currentResource': ko.observable('<http://test.com/about1>')};
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.rdf.prefixes.set("test", "http://test.com/");
+
+            sko.store.execute(testData, function(success, result){
+                ok(success);
+                sko.applyBindings('#test25', viewModel, function(){
+                    setTimeout(function(){                    
+                        jQuery("#test25prop2").val('new value');
+                        jQuery("#test25prop2").trigger('change');
+                        ok(jQuery("#test25prop2").val() === 'new value');
+                        setTimeout(function(){                    
+                            sko.store.execute("SELECT ?data { <http://test.com/about1> <http://test.com/value> ?data }", function(res, data) {
+                                ok(data[0].data.value === 'new value');
+                                // clean up
+                                jQuery("#test25").remove();
+                                start();
+                            });
+                        },200);
+                    },200);
+                });
+            });
+        });
+    });
+});

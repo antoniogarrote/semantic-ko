@@ -626,8 +626,9 @@ ko.memoization = (function () {
                 if (extraCallbackParamsArray)
                     ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
 
-                sko.traceResources(domNode, combinedParams, function(){
-                    sko.traceRelations(domNode, combinedParams, function(){
+                var viewModel = extraCallbackParamsArray[0];
+                sko.traceResources(domNode, viewModel, function(){
+                    sko.traceRelations(domNode, viewModel, function(){
                         ko.memoization.unmemoize(memos[i].memoId, combinedParams);
                         node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
                         if (node.parentNode)
@@ -1240,9 +1241,9 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "')(__ko_value); }");
                     } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "')(__ko_value); }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
@@ -3015,26 +3016,21 @@ sko.NTUri = function(uri) {
  * helper method for bound accessors
  */
 sko.Resource.prototype.tryProperty = function(property)  {
-
     property = sko.NTUri(property);
 
     if(this[property]!=null) {
         return this[property];
     } else {
 
-        if(this.about().indexOf("_:sko") === 0) {
-            this.valuesMap[property] = null;
-            this[property] = ko.observable(null);
-            var that = this;
-            var observerFn = function(newValue){
-                that.valuesMap[property] = newValue;
-            };
-            var subscription = this[property].subscribe(observerFn)
-            this.subscriptions.push(subscription);
-            return this[property];
-        } else {
-            return undefined;
-        }
+        this.valuesMap[property] = null;
+        this[property] = ko.observable(null);
+        var that = this;
+        var observerFn = function(newValue){
+            that.notifyPropertyChange(property,newValue);
+        };
+        var subscription = this[property].subscribe(observerFn)
+        this.subscriptions.push(subscription);
+        return this[property];
     }
 };
 
@@ -3058,8 +3054,18 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
     sko.log("*** received KO notification for property "+property+" -> "+newValue);
     if(this.valuesMap[property] == null) {
         // property is not defined -> create
-        // @todo
         // if it is a blank ID don't do anything
+        this.valuesMap[property] = newValue;
+        var isBlank = this.about().indexOf("_:sko") === 0
+        if(!isBlank) {
+            if(newValue.indexOf("http") === 0) {
+                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
+            } else if(newValue.indexOf("<") === 0) {
+                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
+            } else {
+                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+            }
+        }
     } else {
         if(this.valuesMap[property] !== newValue && !sko.isSKOBlankNode(newValue)) {
             // property is already present and the value has changed -> update
@@ -3261,30 +3267,35 @@ sko.traceResources = function(rootNode, model, cb) {
     var registerFn = function(k,env){
         node = nodes[env._i];
         var about = jQuery(node).attr("about");
-        var databind;
+        var aboutId = jQuery(node).attr("aboutId");
+        if(aboutId == null) {
+            var databind;
 
-        if(about == null) {
-            dataBind = jQuery(node).attr("data-bind");
-            if(dataBind != null) {
-                if(dataBind.indexOf("about:") != -1) {
-                    var re = new RegExp("\s*([^ ]+)\s*,?");
-                    about = re.exec(dataBind.split("about:")[1])[0];
-                    if(about[about.length-1] === ',') {
-                        about = about.slice(0,about.length-1);
+            if(about == null) {
+                dataBind = jQuery(node).attr("data-bind");
+                if(dataBind != null) {
+                    if(dataBind.indexOf("about:") != -1) {
+                        var re = new RegExp("\s*([^ ]+)\s*,?");
+                        about = re.exec(dataBind.split("about:")[1])[0];
+                        if(about[about.length-1] === ',') {
+                            about = about.slice(0,about.length-1);
+                        }
                     }
                 }
             }
-        }
 
-        if(about != null && about != '') {
-            if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
-                about = model[about];
+            if(about != null && about != '') {
+                if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
+                    about = model[about];
+                }
+                
+                sko.about(about, model, function(aboutId) {
+                    jQuery(node).attr('aboutId',aboutId);
+                    k(registerFn,env);
+                });
+            } else {
+                k(registerFn, env);
             }
-            
-            sko.about(about, model, function(aboutId) {
-                jQuery(node).attr('aboutId',aboutId);
-                k(registerFn,env);
-            });
         } else {
             k(registerFn, env);
         }
@@ -3465,7 +3476,16 @@ sko.applyBindings = function(node, viewModel, cb) {
  * Retrieves the resource object active for a node
  */
 sko.resource = function(jqueryPath) {
-    return sko.currentResource(jQuery(jqueryPath).toArray()[0]);
+    var nodes = jQuery(jqueryPath).toArray();
+    if(nodes.length === 1) {
+        return sko.currentResource(nodes[0]);
+    } else {
+        var acum = [];
+        for(var i=0; i<nodes.length; i++) {
+            acum.push(sko.currentResource(nodes[i]));
+        }
+        return acum;
+    }
 }
 
 // place holder for the parser

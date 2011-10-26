@@ -50,8 +50,9 @@ ko.memoization = (function () {
                 if (extraCallbackParamsArray)
                     ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
 
-                sko.traceResources(domNode, combinedParams, function(){
-                    sko.traceRelations(domNode, combinedParams, function(){
+                var viewModel = extraCallbackParamsArray[0];
+                sko.traceResources(domNode, viewModel, function(){
+                    sko.traceRelations(domNode, viewModel, function(){
                         ko.memoization.unmemoize(memos[i].memoId, combinedParams);
                         node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
                         if (node.parentNode)
