@@ -667,3 +667,50 @@ asyncTest('testing additional properties', function() {
         });
     });
 });
+
+asyncTest('testing bindings inside templates', function() {
+    var testData = "INSERT DATA { <http://test.com/about26> a <http://xmlns.com/foaf/0.1/Person> .\
+                                  <http://test.com/about26> <http://xmlns.com/foaf/0.1/name> 'Juan' }";
+
+    var viewModel = {'currentResource': ko.observable('<http://test.com/about>')};
+    
+    viewModel.webidProperties = ko.dependentObservable(function(){
+        try {
+            console.log("WEBID PROPS!");
+                var acum = [];
+                sko.store.execute("SELECT ?p ?o { "+viewModel.currentResource()+" ?p ?o }", function(succ, triples) {
+                    for(var i=0; i<triples.length; i++) {
+                        acum.push({prop:triples[i].p.value, val:triples[i].o.value});
+                    }
+                    console.log(acum);
+                    console.log("returning "+acum.length+" props");
+                });
+                
+                return acum;
+        } catch(e) { 
+            return [];
+        }
+    });
+
+    jQuery(document).ready(function(){
+        sko.ready(function(){
+            sko.rdf.prefixes.set("test", "http://test.com/");
+
+            sko.store.execute(testData, function(success, result){
+                viewModel.currentResource("<http://test.com/about26>")
+                ok(success);
+
+                sko.applyBindings('#test26', viewModel, function(){
+                    var vals = jQuery("#test26 td.bound-prop").contents();
+                    ok(vals.length === 2);
+                    ok(vals[0].nodeValue === "<http://xmlns.com/foaf/0.1/Person>");
+                    ok(vals[1].nodeValue === "Juan");
+                    start();
+
+                    // clean up
+                    jQuery("#test26").remove();
+                });
+            });
+        });
+    });
+});

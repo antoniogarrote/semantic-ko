@@ -89,12 +89,45 @@ ko.jqueryTmplTemplateEngine = function () {
     },
 
     this['createJavaScriptEvaluatorBlock'] = function (script) {
+        var splitTemplate = function(dataBindCode)  {
+            var regexp1 = /<\$[^>]*>/g;
+
+            if(dataBindCode.split(regexp1).length > 1) {
+		var acum = ""
+		var rem = null;
+
+		dataBindCode.replace(regexp1,function( all, slash, type, fnargs, target, parens, args ){ 
+		    if(rem === null) {
+			rem = type;
+		    }
+	     
+		    var parts = rem.split(all);
+		    
+	     
+		    acum = acum +  parts[0] +  all.replace(/</,"<'+").replace(/>/,"+'>");
+		    parts.shift();
+		    if(parts.length === 1) {
+			    acum = acum + parts[0];
+		    } else {
+			rem = parts.join(all);
+		    }
+		});
+
+		return acum;
+	    } else {
+                return dataBindCode;
+            }
+        };
+
+        var transformedTemplate =  splitTemplate(script);
+
+        // nothing to escape -> regular execution
         if (this.jQueryTmplVersion == 1)
-            return "{{= " + script + "}}";
+            return "{{= " + transformedTemplate + "}}"
             
         // From v2, jquery-tmpl does some parameter parsing that fails on nontrivial expressions.
         // Prevent it from messing with the code by wrapping it in a further function.
-        return "{{ko_code ((function() { return " + script + " })()) }}";
+        return "{{ko_code ((function() { return " + transformedTemplate + " })()) }}"
     },
 
     this.addTemplate = function (templateName, templateMarkup) {

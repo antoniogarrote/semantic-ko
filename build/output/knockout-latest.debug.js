@@ -1241,9 +1241,9 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "')(__ko_value); }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "')(__ko_value); }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
@@ -2289,12 +2289,45 @@ ko.jqueryTmplTemplateEngine = function () {
     },
 
     this['createJavaScriptEvaluatorBlock'] = function (script) {
+        var splitTemplate = function(dataBindCode)  {
+            var regexp1 = /<\$[^>]*>/g;
+
+            if(dataBindCode.split(regexp1).length > 1) {
+		var acum = ""
+		var rem = null;
+
+		dataBindCode.replace(regexp1,function( all, slash, type, fnargs, target, parens, args ){ 
+		    if(rem === null) {
+			rem = type;
+		    }
+	     
+		    var parts = rem.split(all);
+		    
+	     
+		    acum = acum +  parts[0] +  all.replace(/</,"<'+").replace(/>/,"+'>");
+		    parts.shift();
+		    if(parts.length === 1) {
+			    acum = acum + parts[0];
+		    } else {
+			rem = parts.join(all);
+		    }
+		});
+
+		return acum;
+	    } else {
+                return dataBindCode;
+            }
+        };
+
+        var transformedTemplate =  splitTemplate(script);
+
+        // nothing to escape -> regular execution
         if (this.jQueryTmplVersion == 1)
-            return "{{= " + script + "}}";
+            return "{{= " + transformedTemplate + "}}"
             
         // From v2, jquery-tmpl does some parameter parsing that fails on nontrivial expressions.
         // Prevent it from messing with the code by wrapping it in a further function.
-        return "{{ko_code ((function() { return " + script + " })()) }}";
+        return "{{ko_code ((function() { return " + transformedTemplate + " })()) }}"
     },
 
     this.addTemplate = function (templateName, templateMarkup) {
@@ -2314,7 +2347,8 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);Utils = {};
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
+Utils = {};
 Utils.stackCounterLimit = 1000;
 Utils.stackCounter = 0;
 
@@ -3016,6 +3050,7 @@ sko.NTUri = function(uri) {
  * helper method for bound accessors
  */
 sko.Resource.prototype.tryProperty = function(property)  {
+
     property = sko.NTUri(property);
 
     if(this[property]!=null) {
@@ -3058,12 +3093,14 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
         this.valuesMap[property] = newValue;
         var isBlank = this.about().indexOf("_:sko") === 0
         if(!isBlank) {
-            if(newValue.indexOf("http") === 0) {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
-            } else if(newValue.indexOf("<") === 0) {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
-            } else {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+            if(newValue != null) {
+                if(newValue.indexOf("http") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
+                } else if(newValue.indexOf("<") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
+                } else {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+                }
             }
         }
     } else {

@@ -743,12 +743,14 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
         this.valuesMap[property] = newValue;
         var isBlank = this.about().indexOf("_:sko") === 0
         if(!isBlank) {
-            if(newValue.indexOf("http") === 0) {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
-            } else if(newValue.indexOf("<") === 0) {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
-            } else {
-                sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+            if(newValue != null) {
+                if(newValue.indexOf("http") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
+                } else if(newValue.indexOf("<") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
+                } else {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+                }
             }
         }
     } else {

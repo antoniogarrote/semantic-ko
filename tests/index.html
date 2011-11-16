@@ -209,5 +209,15 @@
           </span>
         </div>
 
+        <div id='test26'>
+          <table about='<http://test.com/about26>' data-bind='template: "test-template26"'>
+          </table>
+        </div>
+
+        <script id='test-template26' type='text/html'>
+          {{each webidProperties}}
+            <tr><td>${$value.prop}</td><td class='bound-prop' data-bind='text: <$value.prop>'></td></tr>
+          {{/each}}
+        </script>
 </body>
 </html>
