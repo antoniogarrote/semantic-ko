@@ -167,7 +167,7 @@ ko.utils = new (function () {
             // the variable name "expression" itself will clash with a subproperty called "expression"
             // The model must available in the chain scope for arbritrary JS code to execute, but it 
             // also must be reference by <> and [] URIs anc CURIES
-            return (new Function("__SKO__sc", "with(__SKO__sc){ return (" + expression + ") }"))(scope);
+            return (new Function("__SKO__sc", "with(__SKO__sc){ var innerNode=skonode; return (" + expression + ") }"))(scope);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {

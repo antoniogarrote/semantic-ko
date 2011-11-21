@@ -23,7 +23,7 @@ ko.templateRewriting = (function () {
                 // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
                 // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
                 var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
-                    return (function() { return { " + dataBindAttributeValue + " } })() \
+                    return (function() { var innerNode=skonode; return { " + dataBindAttributeValue + " } })() \
                 })";
                 return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
             });

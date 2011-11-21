@@ -183,7 +183,7 @@ ko.utils = new (function () {
             // the variable name "expression" itself will clash with a subproperty called "expression"
             // The model must available in the chain scope for arbritrary JS code to execute, but it 
             // also must be reference by <> and [] URIs anc CURIES
-            return (new Function("__SKO__sc", "with(__SKO__sc){ return (" + expression + ") }"))(scope);
+            return (new Function("__SKO__sc", "with(__SKO__sc){ var innerNode=skonode; return (" + expression + ") }"))(scope);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
@@ -1153,9 +1153,12 @@ ko.jsonExpressionRewriting = (function () {
             if (jsonString.length < 3)
                 return {};
 
+            //@modified
+            // added counter of nested curly braces
+
             // We're going to split on commas, so first extract any blocks that may contain commas other than those at the top level
             var tokens = [];
-            var tokenStart = null, tokenEndChar;
+            var tokenStart = null, tokenEndChar, tokenCounter;
             for (var position = jsonString.charAt(0) == "{" ? 1 : 0; position < jsonString.length; position++) {
                 var c = jsonString.charAt(position);
                 if (tokenStart === null) {
@@ -1172,6 +1175,7 @@ ko.jsonExpressionRewriting = (function () {
                             break;
                         case "{":
                             tokenStart = position;
+                            tokenCounter = 1;
                             tokenEndChar = "}";
                             break;
                         case "[":
@@ -1179,6 +1183,10 @@ ko.jsonExpressionRewriting = (function () {
                             tokenEndChar = "]";
                             break;
                     }
+                } else if(tokenEndChar == "}" && c == "{") {
+                    tokenCounter++;
+                } else if(tokenEndChar == "}" && c == "}" && tokenCounter>1) {
+                    tokenCounter--;
                 } else if (c == tokenEndChar) {
                     var token = jsonString.substring(tokenStart, position + 1);
                     tokens.push(token);
@@ -1241,15 +1249,19 @@ ko.jsonExpressionRewriting = (function () {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
                     if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
-                    } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                    } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
                     } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
                         // nothing here
                     } else {
-                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(skonode); }; " + value + " = __ko_value; }");
+                        if(/tryProperty\([^)]+\)$/.test(value) || /prop\([^)]+\)$/.test(value)) {
+                            propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; " + value + "(__ko_value); }");
+                        } else {
+                            propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; " + value + " = __ko_value; }");
+                        }
                     }
                 }
                 if(!isFirst)  {
@@ -1258,15 +1270,15 @@ ko.jsonExpressionRewriting = (function () {
                     isFirst = false;
                 }
                 if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
-                } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && key !== 'about' && key !== 'rel') {
-                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return sko.current().tryProperty('"+value+"') })()";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+value+"') })()";
+                } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+value+"') })()";
                 } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
-                } else if(value.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null && (key === 'about' || key === 'rel')) {
+                } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && (key === 'about' || key === 'rel')) {
                     readers = readers+key+": sko.rdf.prefixes.resolve('"+value.slice(1,value.length-1)+"')";
                 } else {
-                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(skonode); }; return "+value+" })()";
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return "+value+" })()";
                 }
             }
 
@@ -1831,7 +1843,7 @@ ko.templateRewriting = (function () {
                 // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
                 // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
                 var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
-                    return (function() { return { " + dataBindAttributeValue + " } })() \
+                    return (function() { var innerNode=skonode; return { " + dataBindAttributeValue + " } })() \
                 })";
                 return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
             });
