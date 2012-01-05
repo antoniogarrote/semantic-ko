@@ -36,6 +36,133 @@ sko.log = function(msg) {
     }
 };
 
+/**
+ * JSON-LD utilities
+ */
+sko.jsonld = {
+        coerce: function(obj, property, type) {
+            if(obj['@context'] == null) {
+                obj['@context'] = {};
+            }
+            if(obj['@context']['@coerce'] == null) {
+                obj['@context']['@coerce'] = {};
+                obj['@context']['@coerce'][type] = property;
+            } else if(typeof(obj['@context']['@coerce'][type]) === 'string' &&
+                      obj['@context']['@coerce'][type] != property) {
+                var oldValue = obj['@context']['@coerce'][type];
+                obj['@context']['@coerce'][type] = [oldValue, property];
+            } else if(typeof(obj['@context']['@coerce'][type]) === 'object') {
+                for(var i=0; i<obj['@context']['@coerce'][type].length; i++) {
+                    if(obj['@context']['@coerce'][type][i] === property)  {
+                        return obj;
+                    }
+                }
+
+                obj['@context']['@coerce'][type].push(property);
+            } else {
+                obj['@context']['@coerce'][type] = property;
+            }
+
+            return obj;
+        },
+
+        graphToJSONLD: function(graph, rdf) {
+            var nodes = {};
+            
+            graph.forEach(function(triple) {
+                var subject = triple.subject.valueOf();
+                var node = nodes[subject];
+                if(node == null) {
+                    node = {"@subject" : subject, "@context": {}};
+                    nodes[subject] = node;
+                }
+
+                var predicate = triple.predicate.valueOf();
+                if(predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+                    predicate = "@type";
+                }
+
+                var property  = null;
+                var isCURIE = false;
+                property = rdf.prefixes.shrink(predicate);
+
+                if(property != predicate) {
+                    isCURIE = true;
+                }
+                if(property.indexOf("#") != -1) {
+                    property = property.split("#")[1];
+                } else {
+                    property = property.split("/");
+                    property = property[property.length-1];
+                }
+
+                var object = triple.object.valueOf();
+
+                if(node[property] != null) {
+                    if(!isCURIE) {
+                        if(node["@context"][property] != null || property[0] === '@') {
+                            if(typeof(node[property]) === "object") {
+                                node[property].push(object);
+                            } else {
+                                var object = [ node[property], object];
+                                node[property] = object;
+                            }
+                        } else {
+                            property = triple.predicate.valueOf();
+                            if(node[property] == null) {
+                                node[property] = object;
+                            } else {
+                                if(typeof(node[property]) === "object") {
+                                    node[property].push(object);
+                                } else {
+                                    var object = [ node[property], object ];
+                                    node[property] = object;
+                                }
+                            }
+
+                            if(typeof(object) === 'string' &&
+                               (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
+                                sko.jsonld.coerce(node, property, "@iri")
+                            }
+                        }
+                    } else {
+                        var prefix = property.split(":")[0];
+                        if(typeof(node[property]) === "object") {
+                            node[property].push(object);
+                        } else {
+                            var object = [ node[property], object];
+                            node[property] = object;
+                        }
+                    }
+                } else {
+                    node[property] = object;
+                    if(property[0] != '@') {
+                        if(isCURIE == true) {
+                            // saving prefix
+                            var prefix = property.split(":")[0];
+                            node["@context"][prefix] = rdf.prefixes[prefix];
+                        } else {
+                            // saving whole URI in context
+                            node["@context"][property] = triple.predicate.valueOf();
+                        }
+
+                        if(typeof(object) === 'string' &&
+                           (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
+                            sko.jsonld.coerce(node, property, "@iri")
+                        }
+                        
+                    }
+                }
+            });
+
+            var results = [];
+            for(var p in nodes) {
+                results.push(nodes[p]);
+            }
+
+            return results;
+        }
+};
 
 /**
  * Manipulate prototypes for RDFS classes
@@ -159,12 +286,16 @@ sko.ready = function()  {
         cb = arguments[0];
         rdfstore.create(function(store) {
             sko.store = store;
-
+	    sko.store.registerDefaultProfileNamespaces();
             sko.rdf = sko.store.rdf;
 
             cb(true);
         });
     }
+};
+
+sko.registerPrefix = function(prefix, uri) {
+    sko.store.registerDefaultNamespace(prefix, uri);
 };
 
 // blank IDs counter
