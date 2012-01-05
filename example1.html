@@ -1,0 +1,194 @@
+<!doctype html>
+
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>SemanticKO Examples: 1. Simple Bindings</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/codemirror.css">
+  <link rel="stylesheet" href="./css/admin.css">
+
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript' src='./js/codemirror.js'></script>
+  <script type='text/javascript' src='./js/modes/javascript.js'></script>
+  <script type='text/javascript' src='./js/modes/css.js'></script>
+  <script type='text/javascript' src='./js/modes/xml.js'></script>
+  <script type='text/javascript' src='./js/modes/htmlmixed.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){
+	var demo = {
+	    data: '{\n  "@subject": "http://www.w3.org/People/Berners-Lee/card#i",\n  "foaf:name": "Tim Berners Lee",\n  "@context": {"foaf": "http://xmlns.com/foaf/0.1/"}\n}',
+	    viewModel: 'var viewModel = {};\nsko.applyBindings("#example1", viewModel)',
+	    view: '<div id="example1">\n  <span about="<http://www.w3.org/People/Berners-Lee/card#i>">\n    <p data-bind="text: [foaf:name]"></p>\n  </span>\n</div>'
+	};
+
+	window.viewModelEditor = CodeMirror(document.getElementById("view-model"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.viewModel,
+	    mode:  "javascript"
+	});
+	window.dataEditor = CodeMirror(document.getElementById("data"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.data,
+	    mode:  "javascript"
+	});
+	window.viewEditor = CodeMirror(document.getElementById("view"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.view,
+	    mode:  "htmlmixed"
+	});
+
+        jQuery('#sparql-button').bind('click', function() {
+	    new rdfstore_frontend('#frontend',sko.store);
+	});
+
+	jQuery('#run-button').bind('click', function() {
+	    try {
+		jQuery("#output").empty();
+		var html = window.viewEditor.getValue();
+		jQuery("#output").append(html);
+		sko.ready(function() {
+		    var data = window.dataEditor.getValue();
+		    var json = JSON.parse(data);
+		    sko.store.load("application/json", json, function(success, loaded) {
+			if(success) {
+			    var code = window.viewModelEditor.getValue();
+			    eval(code);
+			    jQuery('#sparql-button').removeAttr('disabled');
+			} else {
+			    console.log("Error loading data");
+			}
+		    });
+		});
+	    } catch(e) {
+		jQuery('#sparql-button').attr('disabled', 'disabled');
+		console.log(e);
+		console.log(e.message);
+		console.log(e.stack);
+		
+		alert("ERROR: "+e.message);
+	    }
+	});
+    });
+  </script>
+</head>
+
+<body>
+  <!-- holder for the frontend -->
+  <div id='frontend-overlay'></div>
+  <div id='frontend' style='position: absolute; width:95%; top:10px; left:5%; z-index:1000'></div>
+
+  <div class='container'>
+    <!-- header -->
+    <div class='row' id='header'>
+      <div class='span9'>
+	<h1>Example 1: Simple Bindings</h1>
+      </div>
+      <div class='span7' id='header-actions'>
+	<button id='run-button' class='btn large success'>
+	  <b>Run example</b>
+	</button>
+	<button id='sparql-button' class='btn large' disabled>
+          <b>SPARQL query</b>
+	</button>
+      </div>
+    </div>
+
+    <div class='row'>
+      <!-- left column -->
+      <div class='span8'>
+
+	<div id='description-container' class='row'>
+	  <div class='span7'>
+           <div class='row'>
+	     <h3>Description</h3>
+           </div>
+           <div class='row'>
+	     <p>
+	       This demo shows the simplest kind of binding available in semanticKO.
+	       The <code>about</code> HTML property can be used to bind a DOM node to a RDF node stored in the data layer. Once the node is bound, RDF properties for that node can be bound to different properties of the DOM node using the <code>data-bind</code> property defined in <a href='http://knockoutjs.com/'>KnockoutJS</a>.
+	     </p>
+	     <p>
+	       In this case we have bound the <code>div#example1</code> child <code>span</code> DOM node to the RDF <code>http://www.w3.org/People/Berners-Lee/card#i</code> node describing a person. Then the text of a child <code>p</code> node has been bound to the <code>foaf:name</code> RDF property.
+	     </p>
+	     <p>
+	       SemanticKO also supports the use of a <a href='http://en.wikipedia.org/wiki/Model_View_ViewModel'>view model</a> object for the view, in the same way as <a href='http://knockoutjs.com/'>KnockoutJS</a>. In this case, we provide and empty object, since the RDF data layer is being used as the effective view model.
+	     </p>
+
+	   </div>
+	  </div>
+	</div>
+
+	<div id='output-container' class='row ex-editor span7'>
+	  <div class='span7'>
+            <div class='row'>
+              <h3 class='span7'>Output</h3>
+            </div>
+            <div id='output' class='row'>
+	    </div>
+	  </div>
+	</div>
+      <!-- end of left column -->	
+      </div>
+
+      <!-- right column -->
+      <div class='span8'>
+
+	<div id='view-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View</h3>
+            </div>
+            <div id='view' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='data-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>Data (<a target='_blank' href='http://json-ld.org/spec/ED/json-ld-syntax/20111016/'>JSON-LD</a>)</h3>
+            </div>
+            <div id='data' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='view-model-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View Model</h3>
+            </div>
+            <div id='view-model' class='row'>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <!-- end of right column -->
+    </div>
+
+  <!-- end of container -->
+  </div>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>SemanticKO Examples: 3.Observing Changes</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/codemirror.css">
+  <link rel="stylesheet" href="./css/admin.css">
+
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript' src='./js/codemirror.js'></script>
+  <script type='text/javascript' src='./js/modes/javascript.js'></script>
+  <script type='text/javascript' src='./js/modes/css.js'></script>
+  <script type='text/javascript' src='./js/modes/xml.js'></script>
+  <script type='text/javascript' src='./js/modes/ntriples.js'></script>
+  <script type='text/javascript' src='./js/modes/htmlmixed.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){
+	var demo = {
+	    data: '@prefix : <http://semanticko.org/examples/things/> .\n\
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n\
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\
+\n\
+:John_McCarthy foaf:name "John McCarthy" ;\n\
+               a foaf:Person ; \n\
+               :inventorOf :Lisp .\n\
+:Alan_Kay foaf:name "Alan Kay" ;\n\
+          a foaf:Person ; \n\
+          :inventorOf :Smalltalk .\n\
+:Lisp rdfs:label "Lisp" .\n\
+:Smalltalk rdfs:label "Smalltalk" .',
+
+	    viewModel: 'sko.registerPrefix("tests", "http://semanticko.org/examples/things/");\n\n\
+sko.store.execute("SELECT ?person { ?person a foaf:Person }",function(success, results) {\n\
+  // process the query results\n\
+  var curies = [];\n\
+  var curie;\n\
+  for(var i=0; i<results.length; i++) {\n\
+    curie = sko.rdf.prefixes.shrink(results[i].person.value)\n\
+    curies.push(curie);\n\
+  }\n\
+\n\
+  var viewModel = {people: ko.observableArray(curies),\n\
+                   selectedPerson: ko.observable()};\n\
+\n\
+  sko.applyBindings("#example3", viewModel)\n\
+});',
+
+	    view: '<div id="example3">\n\
+  Gurus:\n\
+  <select data-bind="options: people, value:selectedPerson"></select>\n\
+  <br/><br/>\n\
+  <div about="selectedPerson">\n\
+    <p>\n\
+      You have chosen:\n\
+      <span data-bind="text: [foaf:name]"></span>\n\
+    </p>\n\
+    <p rel="[tests:inventorOf]">\n\
+      Inventor of:\n\
+      <span data-bind="text: [rdfs:label]"></span>\n\
+    </p>\n\
+  </div>\n\
+</div>'
+	};
+
+	window.viewModelEditor = CodeMirror(document.getElementById("view-model"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.viewModel,
+	    mode:  "javascript"
+	});
+	window.dataEditor = CodeMirror(document.getElementById("data"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.data,
+	    mode:  "ntriples"
+	});
+	window.viewEditor = CodeMirror(document.getElementById("view"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.view,
+	    mode:  "htmlmixed"
+	});
+
+        jQuery('#sparql-button').bind('click', function() {
+	    new rdfstore_frontend('#frontend',sko.store);
+	});
+
+	jQuery('#run-button').bind('click', function() {
+	    try {
+		jQuery("#output").empty();
+		var html = window.viewEditor.getValue();
+		jQuery("#output").append(html);
+		sko.ready(function() {
+		    var data = window.dataEditor.getValue();
+		    sko.store.load("text/turtle", data, function(success, loaded) {
+			if(success) {
+			    var code = window.viewModelEditor.getValue();
+			    eval(code);
+			    jQuery('#sparql-button').removeAttr('disabled');
+			} else {
+			    console.log("Error loading data");
+			}
+		    });
+		});
+	    } catch(e) {
+		jQuery('#sparql-button').attr('disabled', 'disabled');
+		console.log(e);
+		console.log(e.message);
+		console.log(e.stack);
+		
+		alert("ERROR: "+e.message);
+	    }
+	});
+    });
+  </script>
+</head>
+
+<body>
+  <!-- holder for the frontend -->
+  <div id='frontend-overlay'></div>
+  <div id='frontend' style='position: absolute; width:95%; top:10px; left:5%; z-index:1000'></div>
+
+  <div class='container'>
+    <!-- header -->
+    <div class='row' id='header'>
+      <div class='span9'>
+	<h1>Example 3: Observing Changes</h1>
+      </div>
+      <div class='span7' id='header-actions'>
+	<button id='run-button' class='btn large success'>
+    <b>Run example</b>
+	</button>
+	<button id='sparql-button' class='btn large' disabled>
+          <b>SPARQL query</b>
+	</button>
+      </div>
+    </div>
+
+    <div class='row'>
+      <!-- left column -->
+      <div class='span8'>
+
+	<div id='description-container' class='row'>
+	  <div class='span7'>
+           <div class='row'>
+	     <h3>Description</h3>
+           </div>
+           <div class='row'>
+	     <p>
+	       In the previous examples (<a href='example1.html'>1</a>, <a href='example2.html'>2</a>) we have used fixed URIs to bind RDF nodes to DOM nodes. However, in real applications it is usually impossible to know in advance the exact URI that must be bound to a node or it has to change in time. <a href='http://knockoutjs.com/'>KnockoutJS</a> offers a solution to this problem that is also available in SemanticKO: <a href='http://knockoutjs.com/documentation/observables.html'>observable properties</a>. Observables are properties in the <a href='http://en.wikipedia.org/wiki/Model_View_ViewModel'>view model</a> that has been declared using the <code>ko.observable</code> or <code>ko.dependentObservable</code> functions. If some DOM property is bound to an observable it is updated automatically by KnockoutJS whenever the value of the property changes. In the same way, if a dependent observable uses another obsevable property to compute its value, it will be recomputed automatically whenever the used observable property changes.
+	     </p>
+             <p>
+	       SemanticKO builds on top of this key feature of KnockoutJS making all the properties in RDF nodes observable. It is also possible to pass an observable property as the value for the <code>about</code> and <code>rel</code> properties. In this way, if the observable property changes, all the nodes bound to that subtree will be re-computed dynamically. In the same way if the value of a RDF property belonging to a RDF node bound to the DOM changes, the rendering of that DOM node will be re-computed to reflect the new values of the bound RDF node.
+	     </p>
+	     <p>
+	       In this example, an observable array for the property <code>people</code> is used to hold the URIs of the RDF nodes that can be selected. Another observable property <code>selectedPerson</code> will hold the selected URI.These observable properties in the view model are bound to the <code>select</code> DOM node using the <code>options</code> <a href='http://knockoutjs.com/documentation/options-binding.html'>KnockoutJS built-in binding</a>.
+	     </p>
+	     <p>
+	       To retrieve all the available people URIs that can be selected, we run a <a href='http://www.w3.org/TR/sparql11-query/'>SPARQL</a> query <code>SELECT ?person { ?person a foaf:Person }</code> agains the data loaded in the application layer that returns all the URIs matching that triple pattern in the loaded data. Finally, since we want to bind <a href='http://en.wikipedia.org/wiki/CURIEs'>compact URIs (CURIEs)</a> in the <code>select</code> DOM node instead of URIs, we use the <code>sko.rdf.prefixes.shrink</code> function to transform the URIs in the query result into CURIEs.
+	       When the user selects an option, the rest of the DOM tree is re-computed and the right RDF nodes are bound to display the corresponding textual values in the DOM tree.
+	     </p>
+
+	   </div>
+	  </div>
+	</div>
+
+	<div id='output-container' class='row ex-editor span7'>
+	  <div class='span7'>
+            <div class='row'>
+              <h3 class='span7'>Output</h3>
+            </div>
+            <div id='output' class='row span6'>
+	    </div>
+	  </div>
+	</div>
+      <!-- end of left column -->	
+      </div>
+
+      <!-- right column -->
+      <div class='span8'>
+
+	<div id='view-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View</h3>
+            </div>
+            <div id='view' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='data-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+	      <h3 class='span8'>Data (<a target='_blank' href='http://www.w3.org/TR/turtle/'>Turtle</a>)</h3>
+            </div>
+            <div id='data' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='view-model-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View Model</h3>
+            </div>
+            <div id='view-model' class='row'>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <!-- end of right column -->
+    </div>
+
+  <!-- end of container -->
+  </div>
+</body>
+</html>

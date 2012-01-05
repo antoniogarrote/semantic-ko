@@ -1,0 +1,213 @@
+<!doctype html>
+
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>SemanticKO Examples: 5.Templates and SPARQL Selectors</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/codemirror.css">
+  <link rel="stylesheet" href="./css/admin.css">
+
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript' src='./js/codemirror.js'></script>
+  <script type='text/javascript' src='./js/modes/javascript.js'></script>
+  <script type='text/javascript' src='./js/modes/css.js'></script>
+  <script type='text/javascript' src='./js/modes/xml.js'></script>
+  <script type='text/javascript' src='./js/modes/htmlmixed.js'></script>
+  <script type='text/javascript' src='./js/modes/ntriples.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){
+	var demo = {
+	    data: '@prefix : <http://semanticko.org/examples/things/> .\n\
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n\
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\
+\n\
+:John_McCarthy foaf:name "John McCarthy" ;\n\
+               a foaf:Person ; \n\
+               :inventorOf :Lisp .\n\
+:Alan_Kay foaf:name "Alan Kay" ;\n\
+          a foaf:Person ; \n\
+          :inventorOf :Smalltalk .\n\
+:Lisp rdfs:label "Lisp" .\n\
+:Smalltalk rdfs:label "Smalltalk" .',
+
+	    viewModel: 'var viewModel = {};\n\
+sko.applyBindings("#example5", viewModel)',
+
+	    view: '<div id="example5">\n\
+  <ul data-bind="template: \'example5-template\'"></ul>\n\
+</div>\n\
+\n\
+<!-- The template -->\n\
+<script id="example5-template" type="text/html">\n\
+  {{each sko.where("{?subject a foaf:Person}")()}}\n\
+    <li about="${$value}"\n\
+        data-bind="text: [foaf:name]">\n\
+    </li>\n\
+  {{/each}}\n\
+</script\>'
+	};
+
+	window.viewModelEditor = CodeMirror(document.getElementById("view-model"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.viewModel,
+	    mode:  "javascript"
+	});
+	window.dataEditor = CodeMirror(document.getElementById("data"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.data,
+	    mode:  "ntriples"
+	});
+	window.viewEditor = CodeMirror(document.getElementById("view"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.view,
+	    mode:  "htmlmixed"
+	});
+
+        jQuery('#sparql-button').bind('click', function() {
+	    new rdfstore_frontend('#frontend',sko.store);
+	});
+
+	jQuery('#run-button').bind('click', function() {
+	    try {
+		jQuery("#output").empty();
+		var html = window.viewEditor.getValue();
+		jQuery("#output").append(html);
+		sko.ready(function() {
+		    var data = window.dataEditor.getValue();
+		    sko.store.load("text/turtle", data, function(success, loaded) {
+			if(success) {
+			    var code = window.viewModelEditor.getValue();
+			    eval(code);
+			    jQuery('#sparql-button').removeAttr('disabled');
+			} else {
+			    console.log("Error loading data");
+			}
+		    });
+		});
+	    } catch(e) {
+		jQuery('#sparql-button').attr('disabled', 'disabled');
+		console.log(e);
+		console.log(e.message);
+		console.log(e.stack);
+		
+		alert("ERROR: "+e.message);
+	    }
+	});
+    });
+  </script>
+</head>
+
+<body>
+  <!-- holder for the frontend -->
+  <div id='frontend-overlay'></div>
+  <div id='frontend' style='position: absolute; width:95%; top:10px; left:5%; z-index:1000'></div>
+
+  <div class='container'>
+    <!-- header -->
+    <div class='row' id='header'>
+      <div class='span9'>
+	<h1>Example 5.Templates and SPARQL Selectors</h1>
+      </div>
+      <div class='span7' id='header-actions'>
+	<button id='run-button' class='btn large success'>
+    <b>Run example</b>
+	</button>
+	<button id='sparql-button' class='btn large' disabled>
+          <b>SPARQL query</b>
+	</button>
+      </div>
+    </div>
+
+    <div class='row'>
+      <!-- left column -->
+      <div class='span8'>
+
+	<div id='description-container' class='row'>
+	  <div class='span7'>
+           <div class='row'>
+	     <h3>Description</h3>
+           </div>
+           <div class='row'>
+	     <p>
+	       <a href='http://knockoutjs.com'>KnockoutJS</a> supports <a href='http://knockoutjs.com/documentation/template-binding.html'>templates</a> that are rendered by the library based on the value of observable properties. If the observable property changes, the template is re-rendered with the updated values. SemanticKO extends this support to the use of RDF nodes bound to DOM nodes. If the RDF node changes, the template is also recomputed. At the moment, SemanticKO only supports <a href='http://api.jquery.com/category/plugins/templates/'>jQuery Template</a> as the template engine.
+	       SemanticKO also introduces an additional function <code>sko.each</code> that makes possible to use the results of a <a href='http://www.w3.org/TR/sparql11-query/'>SPARQL</a> query as the source values that will be used to render the template for each result.
+	     </p>
+             <p>
+	       In this example a template that will generate the <code>li</code> DOM nodes for a <code>ul</code> node are generated rendering the <code>example5-template</code> template. This template is rendered for each occurrence of the query <code>{?subject a foaf:Person}</code>. Queries used in the <code>sko.each</code> function must contain only the graph pattern of a SPARQL queries and the binding that will be returned must be named <code>?subject</code>. The value of this URI is then bound to the <code>$value</code> variable of the jQuery template.
+	     </p>
+	   </div>
+	  </div>
+	</div>
+
+	<div id='output-container' class='row ex-editor span7'>
+	  <div class='span7'>
+            <div class='row'>
+              <h3 class='span7'>Output</h3>
+            </div>
+            <div id='output' class='row span6'>
+	    </div>
+	  </div>
+	</div>
+      <!-- end of left column -->	
+      </div>
+
+      <!-- right column -->
+      <div class='span8'>
+
+	<div id='view-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View</h3>
+            </div>
+            <div id='view' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='data-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+	      <h3 class='span8'>Data (<a target='_blank' href='http://www.w3.org/TR/turtle/'>Turtle</a>)</h3>
+            </div>
+            <div id='data' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='view-model-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View Model</h3>
+            </div>
+            <div id='view-model' class='row'>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <!-- end of right column -->
+    </div>
+
+  <!-- end of container -->
+  </div>
+</body>
+</html>

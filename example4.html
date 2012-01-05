@@ -1,0 +1,222 @@
+<!doctype html>
+
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>SemanticKO Examples: 4.Bidirectonal Bindings</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/codemirror.css">
+  <link rel="stylesheet" href="./css/admin.css">
+
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript' src='./js/codemirror.js'></script>
+  <script type='text/javascript' src='./js/modes/javascript.js'></script>
+  <script type='text/javascript' src='./js/modes/css.js'></script>
+  <script type='text/javascript' src='./js/modes/xml.js'></script>
+  <script type='text/javascript' src='./js/modes/htmlmixed.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){
+	var demo = {
+	    data: '{\n\
+ "@subject": "http://bobexample.com/social#me",\n\
+ "foaf:name": "Bob Martin",\n\
+ "foaf:phone": "429043434",\n\
+ "@context": {"foaf": "http://xmlns.com/foaf/0.1/"}\n\
+}',
+
+	    viewModel: 'var viewModel = {};\n\
+sko.applyBindings("#example4", viewModel)',
+
+	    view: '<div id="example4">\n\
+  <p about="<http://bobexample.com/social#me>">\n\
+    <label>\n\
+      <span data-bind="text: [foaf:name]"></span> phone:\n\
+    </label>\n\
+    <input data-bind="value: [foaf:phone]"></input>\n\
+  </p>\n\
+  <table id="example4">\n\
+    <thead>\n\
+     <tr>\n\
+      <th>Name</th><th>Phone</th>\n\
+     </tr>\n\
+    </thead>\n\
+    <tr about="<http://bobexample.com/social#me>">\n\
+      <td data-bind="text: [foaf:name]"></td>\n\
+      <td data-bind="text: [foaf:phone]">\n\
+      </td>\n\
+    </tr>\n\
+  </table>\n\
+</div>'
+	};
+
+	window.viewModelEditor = CodeMirror(document.getElementById("view-model"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.viewModel,
+	    mode:  "javascript"
+	});
+	window.dataEditor = CodeMirror(document.getElementById("data"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.data,
+	    mode:  "javascript"
+	});
+	window.viewEditor = CodeMirror(document.getElementById("view"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.view,
+	    mode:  "htmlmixed"
+	});
+
+        jQuery('#sparql-button').bind('click', function() {
+	    new rdfstore_frontend('#frontend',sko.store);
+	});
+
+	jQuery('#run-button').bind('click', function() {
+	    try {
+		jQuery("#output").empty();
+		var html = window.viewEditor.getValue();
+		jQuery("#output").append(html);
+		sko.ready(function() {
+		    var data = window.dataEditor.getValue();
+		    var json = JSON.parse(data);
+		    sko.store.load("application/json", json, function(success, loaded) {
+			if(success) {
+			    var code = window.viewModelEditor.getValue();
+			    eval(code);
+			    jQuery('#sparql-button').removeAttr('disabled');
+			} else {
+			    console.log("Error loading data");
+			}
+		    });
+		});
+	    } catch(e) {
+		jQuery('#sparql-button').attr('disabled', 'disabled');
+		console.log(e);
+		console.log(e.message);
+		console.log(e.stack);
+		
+		alert("ERROR: "+e.message);
+	    }
+	});
+    });
+  </script>
+</head>
+
+<body>
+  <!-- holder for the frontend -->
+  <div id='frontend-overlay'></div>
+  <div id='frontend' style='position: absolute; width:95%; top:10px; left:5%; z-index:1000'></div>
+
+  <div class='container'>
+    <!-- header -->
+    <div class='row' id='header'>
+      <div class='span9'>
+	<h1>Example 4: Bidirectional Bindings</h1>
+      </div>
+      <div class='span7' id='header-actions'>
+	<button id='run-button' class='btn large success'>
+    <b>Run example</b>
+	</button>
+	<button id='sparql-button' class='btn large' disabled>
+          <b>SPARQL query</b>
+	</button>
+      </div>
+    </div>
+
+    <div class='row'>
+      <!-- left column -->
+      <div class='span8'>
+
+	<div id='description-container' class='row'>
+	  <div class='span7'>
+           <div class='row'>
+	     <h3>Description</h3>
+           </div>
+           <div class='row'>
+	     <p>
+	       In the previous examples, we have seen how KnockoutJS makes possible to establish bindings between the RDF graph data layer in the browser and the DOM tree the browser renders. One important feature about the binding mechanism implemented by the library is that it is bidirectional: not only DOM values are recomputed when change happens in the RDF graph, but the RDF graph is also updated when change happens in a bound DOM node. This is specially useful when creating edit interfaces users can interact with.
+	     </p>
+             <p>
+	       In this example we have bound the same RDF node to two different DOM nodes:
+               <ul>
+		 <li>A <code>input</code> field</li>
+		 <li>A <code>tr</code> table row</li>
+	       </ul>
+	       The user can edit the value of the <code>foaf:phone</code> property in the input field, and when it has finished editing the value, the changes will be stored in the RDF data layer and immediately propagated to the bound <code>tr</code> node.
+	     </p>
+	     <p>
+	       The changes in the RDF graph can also be tested using the <a href='http://www.w3.org/TR/sparql11-query/'>SPARQL</a> frontend available at the top of the page and connected to the RDF data layer of the example.
+	     </p>
+	   </div>
+	  </div>
+	</div>
+
+	<div id='output-container' class='row ex-editor span7'>
+	  <div class='span7'>
+            <div class='row'>
+              <h3 class='span7'>Output</h3>
+            </div>
+            <div id='output' class='row span6'>
+	    </div>
+	  </div>
+	</div>
+      <!-- end of left column -->	
+      </div>
+
+      <!-- right column -->
+      <div class='span8'>
+
+	<div id='view-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View</h3>
+            </div>
+            <div id='view' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='data-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>Data (<a target='_blank' href='http://json-ld.org/spec/ED/json-ld-syntax/20111016/'>JSON-LD</a>)</h3>
+            </div>
+            <div id='data' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='view-model-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View Model</h3>
+            </div>
+            <div id='view-model' class='row'>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <!-- end of right column -->
+    </div>
+
+  <!-- end of container -->
+  </div>
+</body>
+</html>

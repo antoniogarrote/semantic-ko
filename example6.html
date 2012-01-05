@@ -1,0 +1,244 @@
+<!doctype html>
+
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>SemanticKO Examples: 6.Value Adapters and RDF Class Objects</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/codemirror.css">
+  <link rel="stylesheet" href="./css/admin.css">
+
+  <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>
+  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
+  <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript' src='./js/codemirror.js'></script>
+  <script type='text/javascript' src='./js/modes/javascript.js'></script>
+  <script type='text/javascript' src='./js/modes/css.js'></script>
+  <script type='text/javascript' src='./js/modes/xml.js'></script>
+  <script type='text/javascript' src='./js/modes/htmlmixed.js'></script>
+  <script type='text/javascript' src='./js/modes/ntriples.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){
+	var demo = {
+	    data: '@prefix : <http://semanticko.org/examples/things/> .\n\
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n\
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\
+\n\
+:John_McCarthy foaf:name "John McCarthy" ;\n\
+               a foaf:Person ; \n\
+               :inventorOf :Lisp .\n\
+:Alan_Kay foaf:name "Alan Kay" ;\n\
+          a foaf:Person ; \n\
+          :inventorOf :Smalltalk .\n\
+:Lisp rdfs:label "Lisp" .\n\
+:Smalltalk rdfs:label "Smalltalk" .',
+
+	    viewModel: 'sko.registerPrefix("tests", "http://semanticko.org/examples/things/");\n\
+// Adapted property in view model\n\
+var viewModel = {\n\
+                  decoratedNameViewModel:\n\
+                  function() {\n\
+                     return "(view model) mr. "+sko.current().getProp("[foaf:name]");\n\
+                  }\n\
+                };\n\
+\n\
+// Definition of some classes\n\
+sko.Class.define("[foaf:Person]",\n\
+                  {\n\
+                   decoratedName1:\n\
+                   function(){\n\
+                      return "(class 1) mr. " + this.getProp("[foaf:name]");\n\
+                   }\n\
+                 });\n\
+\n\
+sko.Class.define("ObjectSomeValuesFrom([foaf:name])", \n\
+                  {\n\
+                   decoratedName2:\n\
+                   function() {\n\
+                      return "(class 2) mr. " + this.getProp("[foaf:name]");\n\
+                   }\n\
+                 });\n\
+\n\
+sko.applyBindings("#example6", viewModel)',
+
+	    view: '<div id="example6">\n\
+  <ul about="[tests:John_McCarthy]">\n\
+    <li data-bind="text: sko.current().decoratedName1()"></li>\n\
+    <li data-bind="text: sko.current().decoratedName2()"></li>\n\
+    <li data-bind="text: \'(view) mr. \'+sko.current().tryProperty(\'[foaf:name]\')()"></li>\n\
+    <li data-bind="text: decoratedNameViewModel()"></li>\n\
+  </ul>\n\
+</div>'
+	};
+
+	window.viewModelEditor = CodeMirror(document.getElementById("view-model"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.viewModel,
+	    mode:  "javascript"
+	});
+	window.dataEditor = CodeMirror(document.getElementById("data"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    value: demo.data,
+	    mode:  "ntriples"
+	});
+	window.viewEditor = CodeMirror(document.getElementById("view"), {
+	    smartIndent: true,
+	    lineNumbers: true,
+	    lineWrapping: true,
+	    value: demo.view,
+	    mode:  "htmlmixed"
+	});
+
+        jQuery('#sparql-button').bind('click', function() {
+	    new rdfstore_frontend('#frontend',sko.store);
+	});
+
+	jQuery('#run-button').bind('click', function() {
+	    try {
+		jQuery("#output").empty();
+		var html = window.viewEditor.getValue();
+		jQuery("#output").append(html);
+		sko.ready(function() {
+		    var data = window.dataEditor.getValue();
+		    sko.store.load("text/turtle", data, function(success, loaded) {
+			if(success) {
+			    var code = window.viewModelEditor.getValue();
+			    eval(code);
+			    jQuery('#sparql-button').removeAttr('disabled');
+			} else {
+			    console.log("Error loading data");
+			}
+		    });
+		});
+	    } catch(e) {
+		jQuery('#sparql-button').attr('disabled', 'disabled');
+		console.log(e);
+		console.log(e.message);
+		console.log(e.stack);
+		
+		alert("ERROR: "+e.message);
+	    }
+	});
+    });
+  </script>
+</head>
+
+<body>
+  <!-- holder for the frontend -->
+  <div id='frontend-overlay'></div>
+  <div id='frontend' style='position: absolute; width:95%; top:10px; left:5%; z-index:1000'></div>
+
+  <div class='container'>
+    <!-- header -->
+    <div class='row' id='header'>
+      <div class='span9'>
+	<h1>Example 6.Value Adapters and RDF Class Objects</h1>
+      </div>
+      <div class='span7' id='header-actions'>
+	<button id='run-button' class='btn large success'>
+    <b>Run example</b>
+	</button>
+	<button id='sparql-button' class='btn large' disabled>
+          <b>SPARQL query</b>
+	</button>
+      </div>
+    </div>
+
+    <div class='row'>
+      <!-- left column -->
+      <div class='span8'>
+
+	<div id='description-container' class='row'>
+	  <div class='span7'>
+           <div class='row'>
+	     <h3>Description</h3>
+           </div>
+           <div class='row'>
+	     <p>
+	       Most of the time, raw RDF data retrieved from the web must be adapted in order for it to be displayed in the application view. SemanticKO makes possible to pre-process RDF data to be displayed in different ways:
+	       <ul>
+		 <li>RDF properties for the bound RDF node can be retrieved and manipulated inside the <code>data-bind</code> attribute.</li>
+		 <li>Properties can be defined in the view model and then used to define bindings in the <code>data-bind</code> attribute.</li>
+		 <li>A RDF class object can be defined whose properties will be added to all the DOM nodes whose bound RDF node match the descriptoion of the RDF class.</li>
+	       </ul>
+	     </p>
+             <p>
+	       The function <code>sko.current</code> can be used inside the <code>data-bind</code> attribute to retrieve the RDF node object bound to the current DOM node. Properties of this RDF node can be then retrieved using the function <code>sko.current().tryProperty</code> or <code>sko.current().getProp</code>. These function can also be used to define properties in the view model.
+	     </p>
+	     <p>
+	       A more re-usable way of defining adapter functions is to define RDF class objects. These objects are collection of functions that will be added to a bound RDF node if the triples for that node matches the description of the RDF class. Descriptions for RDF classes can be build combining simple constructs: URIs, CURIEs, <code>ObjectUnionOf</code>, <code>ObjectIntersectionOf</code> and <code>ObjectSomeValuesFrom</code>. These building blocks can be combined to form complex class expressions testing for the presence of certain properties and or belonging to a list of RDF types.
+	     </p>
+	     <p>
+	       In the example, four different ways of computing an adapted value for the <code>foaf:name</code> property of a RDF node is shown. Two of these ways involve the definition of two RDF class objects, one associated to all the RDF nodes whose type is <code>foaf:Person</code> and another one for all the RDF nodes with a value for the propert <code>foaf:name</code>: <code>ObjectSomeValuesFrom([foaf:name])</code>.
+	     </p>
+	   </div>
+	  </div>
+	</div>
+
+	<div id='output-container' class='row ex-editor span7'>
+	  <div class='span7'>
+            <div class='row'>
+              <h3 class='span7'>Output</h3>
+            </div>
+            <div id='output' class='row span6'>
+	    </div>
+	  </div>
+	</div>
+      <!-- end of left column -->	
+      </div>
+
+      <!-- right column -->
+      <div class='span8'>
+
+	<div id='view-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View</h3>
+            </div>
+            <div id='view' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='data-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+	      <h3 class='span8'>Data (<a target='_blank' href='http://www.w3.org/TR/turtle/'>Turtle</a>)</h3>
+            </div>
+            <div id='data' class='row'>
+            </div>
+	  </div>
+	</div>
+
+	<div id='view-model-container' class='row ex-editor'>
+	  <div class='span8'>
+            <div class='row ex-editor-title'>
+              <h3 class='span8'>View Model</h3>
+            </div>
+            <div id='view-model' class='row'>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <!-- end of right column -->
+    </div>
+
+  <!-- end of container -->
+  </div>
+</body>
+</html>
