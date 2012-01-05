@@ -8,7 +8,7 @@
             currentUri = currentUri.split("#")[0];
         }
         if(resource.type === 'uri') {
-            console.log("VALUE:"+resource.value._string);
+            //console.log("VALUE:"+resource.value._string);
             if(resource.value._string.indexOf(currentUri) != -1) {
                 var suffix = resource.value._string.split(currentUri)[1];
                 var defaultPrefix = defaultSubject.toString();
@@ -635,7 +635,7 @@
         submitQuery: function() {
             var query = jQuery('#sparql-query-text').val();
             var that = this;
-            console.log("QUERYING...");
+            //console.log("QUERYING...");
             var callback = function(success,results){
                 if(success) {
                     if(that.lastQuery == null) {
