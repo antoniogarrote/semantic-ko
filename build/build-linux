@@ -12,7 +12,7 @@ cat $SourceFiles                    > $OutDebugFile.temp
 
 # Now call Google Closure Compiler to produce a minified version
 cp version-header.js $OutMinFile
-curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
+curl -d output_info=compiled_code -d output_format=text -d compilation_level=SIMPLE_OPTIMIZATIONS --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
 
 # Finalise each file by prefixing with version header and surrounding in function closure
 cp version-header.js $OutDebugFile
