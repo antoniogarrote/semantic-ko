@@ -34,7 +34,7 @@
 	var demo = {
 	    data: '[\n\
  {\n\
-   "@subject": "tests:Lisp",\n\
+   "@id": "tests:Lisp",\n\
    "rdfs:label": "Lisp",\n\
    "@context": {\n\
      "tests": "http://semanticko.org/examples/things/",\n\
@@ -42,15 +42,12 @@
    }\n\
  },\n\
  {\n\
-   "@subject":"tests:John_McCarthy",\n\
+   "@id":"tests:John_McCarthy",\n\
    "foaf:name":"John McCarthy",\n\
    "tests:inventorOf":"tests:Lisp",\n\
    "@context":{\n\
      "tests": "http://semanticko.org/examples/things/",\n\
-     "foaf": "http://xmlns.com/foaf/0.1/",\n\
-     "@coerce": {\n\
-        "@iri":"tests:inventorOf"\n\
-     }\n\
+     "foaf": {"@id": "http://xmlns.com/foaf/0.1/", "@type": "@iri"}\n\
    }\n\
  }\n\
 ]',
