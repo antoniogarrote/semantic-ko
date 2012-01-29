@@ -83,8 +83,23 @@
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
-            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+
+            // @modified
+            if (unwrappedArray.constructor != Array) // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
+
+            // @modified
+	    // wrapping automatically non objects
+	    for(var i=0; i<unwrappedArray.length; i++) {
+		if(typeof(unwrappedArray[i]) === 'number' || typeof(unwrappedArray[i]) === 'string') {
+		    var unwrapped = {$value: unwrappedArray[i]};
+		    for(var p in viewModel) {
+			unwrapped[p] = viewModel[p];
+		    }
+		    unwrappedArray[i] = unwrapped;
+		}
+	    }
+       
 
             // Filter out any entries marked as destroyed
             var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 

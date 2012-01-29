@@ -109,6 +109,30 @@ ko.jsonExpressionRewriting = (function () {
             return jsonString;
         },
 
+	//@modified
+	parseURIsInJSONString: function(jsonString) {
+	    var re = /["']?(<|\[)[a-z:\/.#?&%]+(\]|>)['"]?/g;
+	    var acum = "";
+	    var found = re.exec(jsonString);
+	    while(found != null) {
+		if((found[0][0] === "'" || found[0][0] === '"') &&
+		   (found[0][found[0].length-1] === "'" || found[0][found[0].length-1] === '"')) {
+		    var parts = jsonString.split(found[0]);
+		    acum = acum + parts[0] + found[0];
+		    jsonString = parts[1];
+		} else {
+		    var w = found[0];
+		    var index = found.index;
+		    var pref = jsonString.substring(0,index);
+		    acum = pref+"sko.current().tryProperty('"+w+"')";
+		    jsonString= jsonString.substring(index+w.length);
+		}
+		found = re.exec(jsonString);
+	    }
+
+	    return acum+jsonString;
+	},
+
         insertPropertyReaderWritersIntoJson: function (jsonString) {
             var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
             var propertyAccessorTokens = [];
@@ -116,6 +140,8 @@ ko.jsonExpressionRewriting = (function () {
             var isFirst = true;
             for (var key in parsed) {
                 var value = parsed[key];
+
+		value = this.parseURIsInJSONString(value);
                 if (isWriteableValue(value)) {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");

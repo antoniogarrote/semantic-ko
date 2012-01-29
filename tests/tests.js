@@ -200,7 +200,6 @@ asyncTest('simple related',function(){
     });
 });
 
-
 asyncTest('related binding with model',function(){
     var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' . \
                                   <http://test.com/about1> <http://test.com/related> <http://test.com/about2> .\
@@ -224,7 +223,6 @@ asyncTest('related binding with model',function(){
         });
     });
 });
-
 
 asyncTest('changing subject of related',function(){
     var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' . \
@@ -476,7 +474,7 @@ asyncTest('generator where',function(){
 
 asyncTest('testing simple binding with model and language',function(){
     var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource'@en .\
-                                  <http://test.com/about1> <http://test.com/title> 'un recurso'@es }";
+                                 <http://test.com/about1> <http://test.com/title> 'un recurso'@es }";
     var viewModel = {'currentResource': '<http://test.com/about1>'};
 
     jQuery(document).ready(function(){

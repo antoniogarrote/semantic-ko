@@ -8,7 +8,13 @@
             var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
             return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, node);
         } catch (ex) {
-            throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
+	    if(typeof(console) !== 'undefined') {
+		console.log("!!! ERROR");
+		console.log(attributeText);
+		console.log(ex);
+	    }
+	    //@modified
+            //throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
     }
 

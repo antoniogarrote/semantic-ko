@@ -38,7 +38,11 @@
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
             if (typeof jQuery != 'undefined') {
-                jQuery(node)['html'](html);
+		try {
+                    jQuery(node)['html'](html);		    
+		} catch (x) {
+		    jQuery(node)['html'](html.replace("<","&lt;").replace(">","&gt;"));
+		}
             } else {
                 // ... otherwise, use KO's own parsing logic.
                 var parsedNodes = ko.utils.parseHtmlFragment(html);

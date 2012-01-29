@@ -574,12 +574,13 @@ sko.rel = function(relValue, node, viewModel, cb) {
     } else {
         sko.about[nextId] = ko.dependentObservable({
             read: function(){
-                var uri = relValue();
-                uri = sko.NTUri(uri);
+                var uri;
 
-                sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
-
-                if(uri == null) {
+                if(relValue != null) {
+		    uri = relValue();
+                    uri = sko.NTUri(uri);
+                    sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+		} else {
                     sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                     uri = sko.nextBlankLabel();
                 }
@@ -976,20 +977,72 @@ sko.Resource.storeObserver = function(skoResource) {
         node.forEach(function(triple){
             if(triple.object.interfaceName === 'NamedNode') {
                 sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
-                newValues[triple.predicate.toNT()] = triple.object.toNT();
+
+		if(newValues[triple.predicate.toNT()] != null) {
+		    if(newValues[triple.predicate.toNT()].constructor === Array) {
+			// more than one, added to array.
+			// @todo what if named nodes and literals are mixed?
+			newValues[triple.predicate.toNT()].push(triple.object.toNT());
+			newValues[triple.predicate.toNT()].sort();
+		    } else {
+			newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.toNT()];
+		    }
+		    
+		} else {
+                    newValues[triple.predicate.toNT()] = triple.object.toNT();
+		}
             } else {
                 if(skoResource.defaultLanguage() != null) {
                     if(newValues[triple.predicate.toNT()] == null || triple.object.language == skoResource.defaultLanguage()) {
-                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
-                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
-                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// The value in the array cannot have a null lang
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != triple.object.language) {
+				    // replace old value (no lang) by a new value with lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+			    }
+			} else {
+			    // set up a default value, with null or correct lang
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
                     }
                 } else {
-                    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
-                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
-                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
-                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
-                    }
+		    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != null) {
+				    // replace old value (with lang) by a new value with no lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+				
+			    }
+			} else {
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
+                    }             
                 }
             }
         });
@@ -1003,12 +1056,21 @@ sko.Resource.storeObserver = function(skoResource) {
         for(var p in skoResource.valuesMap) {
             if(newValues[p] != null) {
                 newValueMap[p] = newValues[p];
-                if(skoResource.valuesMap[p] !== newValues[p]) {
-                    toUpdate.push(p);
-                    if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
-                        skoResource.literalLangs[p] = newValuesLangs[p];
+		if(skoResource.valuesMap[p] &&
+		   skoResource.valuesMap[p].constructor === Array &&
+		   newValue[p].constructor === Array) {
+		    if(skoResource.valuesMap[p].length != newValue[p].length) {
+			// @todo check also the individual URIS
+			toUpdate.push(p);
+		    }
+		} else {
+                    if(skoResource.valuesMap[p] !== newValues[p]) {
+			toUpdate.push(p);
+			if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
+                            skoResource.literalLangs[p] = newValuesLangs[p];
+			}
                     }
-                }
+		}
             } else {
                 toNullify.push(p);
                 delete skoResource.literalLangs[p];
