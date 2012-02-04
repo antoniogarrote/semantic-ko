@@ -96,7 +96,7 @@ asyncTest('update store -> update view',function(){
                 ok(success);
                 sko.applyBindings('#test5', viewModel, function(){
                     ok(jQuery("#test5 p").text() === 'a resource');
-                    
+
                     sko.store.execute('DELETE { <http://test.com/about1> <http://test.com/title> ?title } \
                                        INSERT { <http://test.com/about1> <http://test.com/title> "changed in store" }\
                                        WHERE { <http://test.com/about1> <http://test.com/title> ?title }',
@@ -707,6 +707,35 @@ asyncTest('testing bindings inside templates', function() {
 
                     // clean up
                     jQuery("#test26").remove();
+                });
+            });
+        });
+    });
+
+    asyncTest('test null values in properties',function(){
+        var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource'}";
+        var viewModel = {};
+
+        jQuery(document).ready(function(){
+            sko.ready(function(){
+                sko.store.execute(testData, function(success, result){
+                    ok(success);
+                    sko.applyBindings('#test27', viewModel, function(){
+                        ok(jQuery("#test27 p.present").text() === 'a resource');
+                        ok(jQuery("#test27 p.nullified").text() === '');
+                        sko.store.execute('INSERT DATA { <http://test.com/about1> <http://test.com/property> "property value" }',
+                            function(success, results) {
+
+                                ok(success);
+
+                                ok(jQuery("#test27 p.present").text() === 'a resource');
+                                ok(jQuery("#test27 p.nullified").text() === 'property value');
+
+                                // clean up
+                                jQuery("#test27").remove();
+                                start();
+                            });
+                    });
                 });
             });
         });

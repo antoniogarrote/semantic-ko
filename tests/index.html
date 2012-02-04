@@ -219,5 +219,12 @@
             <tr><td>${$value.prop}</td><td class='bound-prop' data-bind='text: <$value.prop>'></td></tr>
           {{/each}}
         </script>
+
+        <div id='test27'>
+          <span about='<http://test.com/about1>'>
+            <p class="present" data-bind='text: <http://test.com/title>'></p>
+            <p class="nullified" data-bind='text: <http://test.com/property>'></p>
+          </span>
+        </div>
 </body>
 </html>
