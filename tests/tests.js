@@ -740,4 +740,25 @@ asyncTest('testing bindings inside templates', function() {
             });
         });
     });
+
+    asyncTest('test URIs inside complex binding expressions',function(){
+        var testData = "INSERT DATA { <http://test.com/about1> <http://test.com/title> 'a resource' ." +
+                       "<http://test.com/about1> <http://test.com/dst> <http://destination.com> }";
+        var viewModel = {};
+
+        jQuery(document).ready(function(){
+            sko.ready(function(){
+                sko.rdf.prefixes.set("test", "http://test.com/");
+                sko.store.execute(testData, function(success, result){
+                    ok(success);
+                    sko.applyBindings('#test28', viewModel, function(){
+                        ok(jQuery("#test28 a.present").text() === 'a resource');
+                        ok(jQuery("#test28 a.present").attr("href") === 'http://destination.com');
+                        jQuery("#test28").remove();
+                        start();
+                    });
+                });
+            });
+        });
+    });
 });

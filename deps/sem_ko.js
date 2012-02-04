@@ -38,7 +38,7 @@ sko.log = function(msg) {
 };
 
 // Added a version identifier
-sko.VERSION = "0.1.0"
+sko.VERSION = "0.1.0";
 
 /**
  * JSON-LD utilities

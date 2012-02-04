@@ -16,7 +16,7 @@
 	    //@modified
             //throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
-    }
+    };
 
     function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
         handler(element, dataValue, allBindings, viewModel);

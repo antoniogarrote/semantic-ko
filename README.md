@@ -6,3 +6,7 @@ RDFStore-JS to handle the RDF/SPARQL data layer.
 More documentation can be found here:
 
 http://antoniogarrote.com/semantic_ko/
+
+A collection of small interactive examples is available here:
+
+http://antoniogarrote.github.com/semantic-ko/index.html

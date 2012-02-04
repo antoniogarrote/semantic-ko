@@ -1347,7 +1347,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
 	    //@modified
             //throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
-    }
+    };
 
     function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
         handler(element, dataValue, allBindings, viewModel);
@@ -2456,7 +2456,7 @@ sko.log = function(msg) {
 };
 
 // Added a version identifier
-sko.VERSION = "0.1.0"
+sko.VERSION = "0.1.0";
 
 /**
  * JSON-LD utilities

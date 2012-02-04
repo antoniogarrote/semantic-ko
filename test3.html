@@ -5,7 +5,6 @@
   <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js'></script>
   <script type='text/javascript' src="./deps/rdf_store.js"></script>
   <script type='text/javascript' src="./build/output/knockout-latest.debug.js"></script>
-  <script type='text/javascript' src="./deps/sem_ko.js"></script>
 </head>
 <body>
 
@@ -17,9 +16,13 @@
                                       <http://test.com/a> <http://test.com/related2> <http://test.com/d>.\
                                       <http://test.com/c> <http://test.com/title> 'test resource c' ; <http://test.com/count> '3' .\
                                       <http://test.com/d> <http://test.com/title> 'test resource d' ; <http://test.com/count> '4' .\
-                                      <http://test.com/e> <http://test.com/title> 'test resource 3' ; <http://test.com/count> '2' .\
+                                      <http://test.com/e> <http://test.com/title> 'test resource e' ; <http://test.com/count> '2' .\
                                       <http://test.com/e> <http://test.com/related1> <http://test.com/c>.\
-                                      <http://test.com/e> <http://test.com/related2> <http://test.com/d>. }";
+                                      <http://test.com/e> <http://test.com/related2> <http://test.com/d>.\
+                                      <http://test.com/items/wittgenstein> <http://test.com/named> 'wittgenstein' .\
+                                      <http://test.com/items/russell> <http://test.com/named> 'russell' .\
+                                      <http://test.com/items/adorno> <http://test.com/named> 'adorno' .\
+                                      <http://test.com/items/popper> <http://test.com/named> 'popper'  }";
 
         var test = function() {
 
@@ -49,7 +52,7 @@
 
         };
 
-        sko.init(function(){
+        sko.ready(function(){
             sko.store.execute(testData,
                               function(result, msg){
                                   test();
@@ -75,6 +78,14 @@
     <p data-bind="text: <http://test.com/title>"></p>
     <span data-bind='template: "test_template"'></span>
   </div>
+
+  <script id='phiolosophers_template' type='text/html'>
+    {{each sko.where("{ ?subject <http://test.com/named> ?o }")()}}
+      <li about='${$value}' data-bind='text:<http://test.com/named>'></li>
+    {{/each}}
+  </script> 
+
+  <ul id='philosphers-list' data-bind='template: "phiolosophers_template"'></ul>   
 
 </body>
 </html>
