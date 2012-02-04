@@ -411,10 +411,12 @@ ko.bindingHandlers['attr'] = {
                 else 
 		    // @modified
 		    var actualValue = attrValue.toString();
-		    if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
-			actualValue = actualValue.substring(1,actualValue.length-1);
+		    if(actualValue) {
+		        if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
+		     	    actualValue = actualValue.substring(1,actualValue.length-1);
+		        }
+                        element.setAttribute(attrName, actualValue);
 		    }
-                    element.setAttribute(attrName, actualValue);
             }
         }
     }

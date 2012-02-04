@@ -627,16 +627,22 @@ ko.memoization = (function () {
             for (var i = 0, j = memos.length; i < j; i++) {
                 var node = memos[i].domNode;
                 var combinedParams = [node];
+
                 if (extraCallbackParamsArray)
                     ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
 
                 var viewModel = extraCallbackParamsArray[0];
                 sko.traceResources(domNode, viewModel, function(){
                     sko.traceRelations(domNode, viewModel, function(){
-                        ko.memoization.unmemoize(memos[i].memoId, combinedParams);
-                        node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
-                        if (node.parentNode)
-                            node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)
+                        try{
+			    if(memos[i]) {
+				ko.memoization.unmemoize(memos[i].memoId, combinedParams);				
+                                node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
+			    }
+
+                            if (node.parentNode)
+				node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)
+                        }catch(e) {}
                     });
                 });
             }
@@ -1835,10 +1841,12 @@ ko.bindingHandlers['attr'] = {
                 else 
 		    // @modified
 		    var actualValue = attrValue.toString();
-		    if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
-			actualValue = actualValue.substring(1,actualValue.length-1);
+		    if(actualValue) {
+		        if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
+		     	    actualValue = actualValue.substring(1,actualValue.length-1);
+		        }
+                        element.setAttribute(attrName, actualValue);
 		    }
-                    element.setAttribute(attrName, actualValue);
             }
         }
     }
