@@ -565,7 +565,11 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
             if (typeof jQuery != 'undefined') {
-                jQuery(node)['html'](html);
+		try {
+                    jQuery(node)['html'](html);		    
+		} catch (x) {
+		    jQuery(node)['html'](html.replace("<","&lt;").replace(">","&gt;"));
+		}
             } else {
                 // ... otherwise, use KO's own parsing logic.
                 var parsedNodes = ko.utils.parseHtmlFragment(html);
@@ -1238,6 +1242,30 @@ ko.jsonExpressionRewriting = (function () {
             return jsonString;
         },
 
+	//@modified
+	parseURIsInJSONString: function(jsonString) {
+	    var re = /["']?(<|\[)[a-z:\/.#?&%]+(\]|>)['"]?/g;
+	    var acum = "";
+	    var found = re.exec(jsonString);
+	    while(found != null) {
+		if((found[0][0] === "'" || found[0][0] === '"') &&
+		   (found[0][found[0].length-1] === "'" || found[0][found[0].length-1] === '"')) {
+		    var parts = jsonString.split(found[0]);
+		    acum = acum + parts[0] + found[0];
+		    jsonString = parts[1];
+		} else {
+		    var w = found[0];
+		    var index = found.index;
+		    var pref = jsonString.substring(0,index);
+		    acum = pref+"sko.current().tryProperty('"+w+"')";
+		    jsonString= jsonString.substring(index+w.length);
+		}
+		found = re.exec(jsonString);
+	    }
+
+	    return acum+jsonString;
+	},
+
         insertPropertyReaderWritersIntoJson: function (jsonString) {
             var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
             var propertyAccessorTokens = [];
@@ -1245,6 +1273,8 @@ ko.jsonExpressionRewriting = (function () {
             var isFirst = true;
             for (var key in parsed) {
                 var value = parsed[key];
+
+		value = this.parseURIsInJSONString(value);
                 if (isWriteableValue(value)) {
                     if (propertyAccessorTokens.length > 0)
                         propertyAccessorTokens.push(", ");
@@ -1309,9 +1339,15 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson'
             var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
             return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, node);
         } catch (ex) {
-            throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
+	    if(typeof(console) !== 'undefined') {
+		console.log("!!! ERROR");
+		console.log(attributeText);
+		console.log(ex);
+	    }
+	    //@modified
+            //throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
         }
-    }
+    };
 
     function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
         handler(element, dataValue, allBindings, viewModel);
@@ -1797,7 +1833,12 @@ ko.bindingHandlers['attr'] = {
                 if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
                     element.removeAttribute(attrName);
                 else 
-                    element.setAttribute(attrName, attrValue.toString());
+		    // @modified
+		    var actualValue = attrValue.toString();
+		    if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
+			actualValue = actualValue.substring(1,actualValue.length-1);
+		    }
+                    element.setAttribute(attrName, actualValue);
             }
         }
     }
@@ -1951,8 +1992,23 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
-            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+
+            // @modified
+            if (unwrappedArray.constructor != Array) // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
+
+            // @modified
+	    // wrapping automatically non objects
+	    for(var i=0; i<unwrappedArray.length; i++) {
+		if(typeof(unwrappedArray[i]) === 'number' || typeof(unwrappedArray[i]) === 'string') {
+		    var unwrapped = {$value: unwrappedArray[i]};
+		    for(var p in viewModel) {
+			unwrapped[p] = viewModel[p];
+		    }
+		    unwrappedArray[i] = unwrapped;
+		}
+	    }
+       
 
             // Filter out any entries marked as destroyed
             var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
@@ -2394,9 +2450,13 @@ sko.activeDebug = false;
 
 sko.log = function(msg) {
     if(sko.activeDebug) {
-        console.log(msg);
+        if(typeof(console) != 'undefined' && console.log)
+            console.log(msg);
     }
 };
+
+// Added a version identifier
+sko.VERSION = "0.1.0";
 
 /**
  * JSON-LD utilities
@@ -2499,7 +2559,7 @@ sko.jsonld = {
                 } else {
                     node[property] = object;
                     if(property[0] != '@') {
-                        if(isCURIE == true) {
+                        if(isCURIE) {
                             // saving prefix
                             var prefix = property.split(":")[0];
                             node["@context"][prefix] = rdf.prefixes[prefix];
@@ -2662,11 +2722,11 @@ sko.registerPrefix = function(prefix, uri) {
 
 // blank IDs counter
 sko._blankCounter = 0;
-sko.nextBlankLabel = function(){
-    var blankLabel = "_:sko_"+sko._blankCounter;
+sko.nextBlankLabel = function () {
+    var blankLabel = "_:sko_" + sko._blankCounter;
     sko._blankCounter++;
     return blankLabel;
-}
+};
 
 // Collection of observable resources
 sko.aboutResourceMap = {};
@@ -2936,12 +2996,13 @@ sko.rel = function(relValue, node, viewModel, cb) {
     } else {
         sko.about[nextId] = ko.dependentObservable({
             read: function(){
-                var uri = relValue();
-                uri = sko.NTUri(uri);
+                var uri;
 
-                sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
-
-                if(uri == null) {
+                if(relValue != null) {
+		    uri = relValue();
+                    uri = sko.NTUri(uri);
+                    sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+		} else {
                     sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
                     uri = sko.nextBlankLabel();
                 }
@@ -3032,7 +3093,7 @@ sko.plainUri = function(uri) {
         return uri.slice(1,uri.length-1);
     } else if(uri.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null) {
         uri = uri.slice(1, uri.length-1);
-        resolved = sko.rdf.prefixes.resolve(uri);
+        var resolved = sko.rdf.prefixes.resolve(uri);
         if(resolved == null) {
             throw("The CURIE "+uri+" cannot be resolved");
         } else {
@@ -3090,7 +3151,7 @@ sko.Resource = function(resourceId, subject, node) {
     // classes this object is instance of
     this.classes = {};
 
-    var that = this
+    var that = this;
     
     // default language for literals
     this.defaultLanguage = ko.dependentObservable(function(){
@@ -3106,7 +3167,7 @@ sko.Resource = function(resourceId, subject, node) {
         if(triple.predicate.toNT() === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>") {
             sko.log(" found resource class "+triple.object.toNT());
             that.classes[triple.object.toNT()] = true;
-        };
+        }
 
         if(triple.object.interfaceName === 'NamedNode') {
             that.valuesMap[triple.predicate.toNT()] = triple.object.toNT();
@@ -3206,23 +3267,23 @@ sko.Resource.prototype.tryProperty = function(property)  {
         var observerFn = function(newValue){
             that.notifyPropertyChange(property,newValue);
         };
-        var subscription = this[property].subscribe(observerFn)
+        var subscription = this[property].subscribe(observerFn);
         this.subscriptions.push(subscription);
         return this[property];
     }
 };
 
-sko.Resource.prototype.prop = function(property)  {
-    return this.tryProperty(property) ;
-} 
+sko.Resource.prototype.prop = function (property) {
+    return this.tryProperty(property);
+};
 
-sko.Resource.prototype.getProp = function(property)  {
-    return this.tryProperty(property)() ;
-} 
+sko.Resource.prototype.getProp = function (property) {
+    return this.tryProperty(property)();
+};
 
-sko.Resource.prototype.setProp = function(property, newValue)  {
-    return this.tryProperty(property)(newValue) ;
-} 
+sko.Resource.prototype.setProp = function (property, newValue) {
+    return this.tryProperty(property)(newValue);
+};
 
 
 /**
@@ -3234,7 +3295,7 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
         // property is not defined -> create
         // if it is a blank ID don't do anything
         this.valuesMap[property] = newValue;
-        var isBlank = this.about().indexOf("_:sko") === 0
+        var isBlank = this.about().indexOf("_:sko") === 0;
         if(!isBlank) {
             if(newValue != null) {
                 if(newValue.indexOf("http") === 0) {
@@ -3271,9 +3332,9 @@ sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
     }
 };
 
-sko.isSKOBlankNode = function(term) {
+sko.isSKOBlankNode = function (term) {
     return term.indexOf("_:sko") === 0;
-}
+};
 
 sko.Resource.prototype.disconnect = function() {
     sko.log(" ** DISCONNECTING");
@@ -3291,23 +3352,23 @@ sko.Resource.prototype.disconnect = function() {
     delete sko.about[this.resourceId];
 };
 
-sko.cleanNode = function(node) {
+sko.cleanNode = function (node) {
     sko.log("*** CLEANING!");
     sko.log(node);
     var thisId = jQuery(node).attr("aboutId");
     var ids = [];
-    if(thisId != null) {
+    if (thisId != null) {
         ids.push(thisId);
     }
     ids = ids.concat(sko.childrenResourceIds(node));
-    for(var i=0; i<ids.length; i++) {
-        if(sko.aboutResourceMap[ids[i]] != null) {
-            sko.log("*** DISCONNECTING "+ids[i]);
+    for (var i = 0; i < ids.length; i++) {
+        if (sko.aboutResourceMap[ids[i]] != null) {
+            sko.log("*** DISCONNECTING " + ids[i]);
             sko.log(sko.aboutResourceMap[ids[i]]);
             sko.aboutResourceMap[ids[i]].disconnect();
         }
     }
-}
+};
 
 sko.Resource.koObserver = function(skoResource) {
     var that = this;
@@ -3338,20 +3399,72 @@ sko.Resource.storeObserver = function(skoResource) {
         node.forEach(function(triple){
             if(triple.object.interfaceName === 'NamedNode') {
                 sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
-                newValues[triple.predicate.toNT()] = triple.object.toNT();
+
+		if(newValues[triple.predicate.toNT()] != null) {
+		    if(newValues[triple.predicate.toNT()].constructor === Array) {
+			// more than one, added to array.
+			// @todo what if named nodes and literals are mixed?
+			newValues[triple.predicate.toNT()].push(triple.object.toNT());
+			newValues[triple.predicate.toNT()].sort();
+		    } else {
+			newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.toNT()];
+		    }
+		    
+		} else {
+                    newValues[triple.predicate.toNT()] = triple.object.toNT();
+		}
             } else {
                 if(skoResource.defaultLanguage() != null) {
                     if(newValues[triple.predicate.toNT()] == null || triple.object.language == skoResource.defaultLanguage()) {
-                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
-                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
-                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// The value in the array cannot have a null lang
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != triple.object.language) {
+				    // replace old value (no lang) by a new value with lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+			    }
+			} else {
+			    // set up a default value, with null or correct lang
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
                     }
                 } else {
-                    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
-                        sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
-                        newValues[triple.predicate.toNT()] = triple.object.valueOf();
-                        newValuesLangs[triple.predicate.toNT()] = triple.object.language;
-                    }
+		    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != null) {
+				    // replace old value (with lang) by a new value with no lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+				
+			    }
+			} else {
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
+                    }             
                 }
             }
         });
@@ -3365,12 +3478,21 @@ sko.Resource.storeObserver = function(skoResource) {
         for(var p in skoResource.valuesMap) {
             if(newValues[p] != null) {
                 newValueMap[p] = newValues[p];
-                if(skoResource.valuesMap[p] !== newValues[p]) {
-                    toUpdate.push(p);
-                    if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
-                        skoResource.literalLangs[p] = newValuesLangs[p];
+		if(skoResource.valuesMap[p] &&
+		   skoResource.valuesMap[p].constructor === Array &&
+		   newValue[p].constructor === Array) {
+		    if(skoResource.valuesMap[p].length != newValue[p].length) {
+			// @todo check also the individual URIS
+			toUpdate.push(p);
+		    }
+		} else {
+                    if(skoResource.valuesMap[p] !== newValues[p]) {
+			toUpdate.push(p);
+			if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
+                            skoResource.literalLangs[p] = newValuesLangs[p];
+			}
                     }
-                }
+		}
             } else {
                 toNullify.push(p);
                 delete skoResource.literalLangs[p];
@@ -3445,14 +3567,14 @@ sko.traceResources = function(rootNode, model, cb) {
     var childNodes = jQuery(rootNode).find("*[about], *[data-bind]").toArray();
     nodes = nodes.concat(childNodes);
     var registerFn = function(k,env){
-        node = nodes[env._i];
+        var node = nodes[env._i];
         var about = jQuery(node).attr("about");
         var aboutId = jQuery(node).attr("aboutId");
         if(aboutId == null) {
             var databind;
 
             if(about == null) {
-                dataBind = jQuery(node).attr("data-bind");
+                var dataBind = jQuery(node).attr("data-bind");
                 if(dataBind != null) {
                     if(dataBind.indexOf("about:") != -1) {
                         var re = new RegExp("\s*([^ ]+)\s*,?");
@@ -3559,12 +3681,12 @@ sko.traceRelations = function(rootNode, model, cb) {
     sko.log(nodes);
 
     var registerFn = function(k,env){
-        node = nodes[env._i];
+        var node = nodes[env._i];
         var rel = jQuery(node).attr("rel");
         var databind;
 
         if(rel == null) {
-            dataBind = jQuery(node).attr("data-bind");
+            var dataBind = jQuery(node).attr("data-bind");
             if(dataBind != null) {
                 if(dataBind.indexOf("rel:") != -1) {
                     var re = new RegExp("\s*([^ ]+)\s*,?");
@@ -3609,30 +3731,30 @@ sko.traceRelations = function(rootNode, model, cb) {
 sko.generatorId = 0;
 sko.generatorsMap = {};
 
-sko.where = function(query) {
-    query = "select ?subject where "+query;
-    var nextId = ''+sko.generatorId;
+sko.where = function (query) {
+    query = "select ?subject where " + query;
+    var nextId = '' + sko.generatorId;
     sko.generatorId++;
 
     sko.generatorsMap[nextId] = ko.observable([]);
 
-    sko.log("*** WHERE QUERY: " +query);
-    sko.store.startObservingQuery(query, function(bindingsList){
+    sko.log("*** WHERE QUERY: " + query);
+    sko.store.startObservingQuery(query, function (bindingsList) {
         var acum = [];
         sko.log(" ** RESULTS!!!");
 
-        for(var i=0; i<bindingsList.length; i++) {
-            sko.log(" ** ADDING VALUE "+ bindingsList[i].subject.value);
-            acum.push("<"+bindingsList[i].subject.value+">");
+        for (var i = 0; i < bindingsList.length; i++) {
+            sko.log(" ** ADDING VALUE " + bindingsList[i].subject.value);
+            acum.push("<" + bindingsList[i].subject.value + ">");
         }
 
         sko.log("** SETTING VALUE");
-        sko.log(acum)
+        sko.log(acum);
         sko.generatorsMap[nextId](acum)
     });
 
     return sko.generatorsMap[nextId];
-}
+};
 
 /**
  * Applies bindings and RDF nodes to the DOM tree
@@ -3655,18 +3777,18 @@ sko.applyBindings = function(node, viewModel, cb) {
 /**
  * Retrieves the resource object active for a node
  */
-sko.resource = function(jqueryPath) {
+sko.resource = function (jqueryPath) {
     var nodes = jQuery(jqueryPath).toArray();
-    if(nodes.length === 1) {
+    if (nodes.length === 1) {
         return sko.currentResource(nodes[0]);
     } else {
         var acum = [];
-        for(var i=0; i<nodes.length; i++) {
+        for (var i = 0; i < nodes.length; i++) {
             acum.push(sko.currentResource(nodes[i]));
         }
         return acum;
     }
-}
+};
 
 // place holder for the parser
 sko.owl = {};
