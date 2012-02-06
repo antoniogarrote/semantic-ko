@@ -1062,8 +1062,8 @@ sko.Resource.storeObserver = function(skoResource) {
                 newValueMap[p] = newValues[p];
 		if(skoResource.valuesMap[p] &&
 		   skoResource.valuesMap[p].constructor === Array &&
-		   newValue[p].constructor === Array) {
-		    if(skoResource.valuesMap[p].length != newValue[p].length) {
+		   newValues[p].constructor === Array) {
+		    if(skoResource.valuesMap[p].length != newValues[p].length) {
 			// @todo check also the individual URIS
 			toUpdate.push(p);
 		    }

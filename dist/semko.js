@@ -3,150 +3,3805 @@
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
 (function(window,undefined){
-var ko=window.ko={};ko.exportSymbol=function(a,c){for(var d=a.split("."),b=window,e=0;e<d.length-1;e++)b=b[d[e]];b[d[d.length-1]]=c};ko.exportProperty=function(a,c,d){a[c]=d};
-ko.utils=new function(){function a(a,b){if("INPUT"!=a.tagName||!a.type||"click"!=b.toLowerCase())return!1;var d=a.type.toLowerCase();return"checkbox"==d||"radio"==d}var c=/^(\s|\u00A0)+|(\s|\u00A0)+$/g,d=/MSIE 6/i.test(navigator.userAgent),b=/MSIE 7/i.test(navigator.userAgent),e={},f={},h=/Firefox\/2/i.test(navigator.userAgent)?"KeyboardEvent":"UIEvents";e[h]=["keyup","keydown","keypress"];e.MouseEvents="click,dblclick,mousedown,mouseup,mousemove,mouseover,mouseout,mouseenter,mouseleave".split(",");
-for(var i in e)if(h=e[i],h.length)for(var g=0,j=h.length;g<j;g++)f[h[g]]=i;return{fieldsIncludedWithJsonPost:["authenticity_token",/^__RequestVerificationToken(_.*)?$/],arrayForEach:function(a,b){for(var d=0,c=a.length;d<c;d++)b(a[d])},arrayIndexOf:function(a,b){if("function"==typeof a.indexOf)return a.indexOf(b);for(var d=0,c=a.length;d<c;d++)if(a[d]===b)return d;return-1},arrayFirst:function(a,b,d){for(var c=0,e=a.length;c<e;c++)if(b.call(d,a[c]))return a[c];return null},arrayRemoveItem:function(a,
-b){var d=ko.utils.arrayIndexOf(a,b);0<=d&&a.splice(d,1)},arrayGetDistinctValues:function(a){for(var a=a||[],b=[],d=0,c=a.length;d<c;d++)0>ko.utils.arrayIndexOf(b,a[d])&&b.push(a[d]);return b},arrayMap:function(a,b){for(var a=a||[],d=[],c=0,e=a.length;c<e;c++)d.push(b(a[c]));return d},arrayFilter:function(a,b){for(var a=a||[],d=[],c=0,e=a.length;c<e;c++)b(a[c])&&d.push(a[c]);return d},arrayPushAll:function(a,b){for(var d=0,c=b.length;d<c;d++)a.push(b[d])},emptyDomNode:function(a){for(;a.firstChild;)ko.removeNode(a.firstChild)},
-setDomNodeChildren:function(a,b){ko.utils.emptyDomNode(a);b&&ko.utils.arrayForEach(b,function(b){a.appendChild(b)})},replaceDomNodes:function(a,b){var d=a.nodeType?[a]:a;if(0<d.length){for(var c=d[0],e=c.parentNode,g=0,f=b.length;g<f;g++)e.insertBefore(b[g],c);g=0;for(f=d.length;g<f;g++)ko.removeNode(d[g])}},setOptionNodeSelectionState:function(a,b){0<=navigator.userAgent.indexOf("MSIE 6")?a.setAttribute("selected",b):a.selected=b},getElementsHavingAttribute:function(a,b){if(!a||1!=a.nodeType)return[];
-var d=[];null!==a.getAttribute(b)&&d.push(a);for(var c=a.getElementsByTagName("*"),e=0,g=c.length;e<g;e++)null!==c[e].getAttribute(b)&&d.push(c[e]);return d},stringTrim:function(a){return(a||"").replace(c,"")},stringTokenize:function(a,b){for(var d=[],c=(a||"").split(b),e=0,g=c.length;e<g;e++){var f=ko.utils.stringTrim(c[e]);""!==f&&d.push(f)}return d},stringStartsWith:function(a,b){a=a||"";return b.length>a.length?!1:a.substring(0,b.length)===b},evalWithinScope:function(a,b,d){if(void 0===b)return(new Function("return "+
-a))();b.skonode=d;return(new Function("__SKO__sc","with(__SKO__sc){ var innerNode=skonode; return ("+a+") }"))(b)},domNodeIsContainedBy:function(a,b){if(b.compareDocumentPosition)return 16==(b.compareDocumentPosition(a)&16);for(;null!=a;){if(a==b)return!0;a=a.parentNode}return!1},domNodeIsAttachedToDocument:function(a){return ko.utils.domNodeIsContainedBy(a,document)},registerEventHandler:function(b,d,c){if("undefined"!=typeof jQuery){if(a(b,d))var e=c,c=function(a,b){var d=this.checked;b&&(this.checked=
-!0!==b.checkedStateBeforeEvent);e.call(this,a);this.checked=d};jQuery(b).bind(d,c)}else if("function"==typeof b.addEventListener)b.addEventListener(d,c,!1);else if("undefined"!=typeof b.attachEvent)b.attachEvent("on"+d,function(a){c.call(b,a)});else throw Error("Browser doesn't support addEventListener or attachEvent");},triggerEvent:function(b,d){if(!b||!b.nodeType)throw Error("element must be a DOM node when calling triggerEvent");if("undefined"!=typeof jQuery){var c=[];a(b,d)&&c.push({checkedStateBeforeEvent:b.checked});
-jQuery(b).trigger(d,c)}else if("function"==typeof document.createEvent)if("function"==typeof b.dispatchEvent)c=document.createEvent(f[d]||"HTMLEvents"),c.initEvent(d,!0,!0,window,0,0,0,0,0,!1,!1,!1,!1,0,b),b.dispatchEvent(c);else throw Error("The supplied element doesn't support dispatchEvent");else if("undefined"!=typeof b.fireEvent){if("click"==d&&"INPUT"==b.tagName&&("checkbox"==b.type.toLowerCase()||"radio"==b.type.toLowerCase()))b.checked=!0!==b.checked;b.fireEvent("on"+d)}else throw Error("Browser doesn't support triggering events");
-},unwrapObservable:function(a){return ko.isObservable(a)?a():a},domNodeHasCssClass:function(a,b){var d=(a.className||"").split(/\s+/);return 0<=ko.utils.arrayIndexOf(d,b)},toggleDomNodeCssClass:function(a,b,d){var c=ko.utils.domNodeHasCssClass(a,b);if(d&&!c)a.className=(a.className||"")+" "+b;else if(c&&!d){for(var d=(a.className||"").split(/\s+/),c="",e=0;e<d.length;e++)d[e]!=b&&(c+=d[e]+" ");a.className=ko.utils.stringTrim(c)}},range:function(a,b){for(var a=ko.utils.unwrapObservable(a),b=ko.utils.unwrapObservable(b),
-d=[],c=a;c<=b;c++)d.push(c);return d},makeArray:function(a){for(var b=[],d=0,c=a.length;d<c;d++)b.push(a[d]);return b},isIe6:d,isIe7:b,getFormFields:function(a,b){for(var d=ko.utils.makeArray(a.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(a.getElementsByTagName("TEXTAREA"))),c="string"==typeof b?function(a){return a.name===b}:function(a){return b.test(a.name)},e=[],g=d.length-1;0<=g;g--)c(d[g])&&e.push(d[g]);return e},parseJson:function(a){return"string"==typeof a&&(a=ko.utils.stringTrim(a))?
-window.JSON&&window.JSON.parse?window.JSON.parse(a):(new Function("return "+a))():null},stringifyJson:function(a){if("undefined"==typeof JSON||"undefined"==typeof JSON.stringify)throw Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");return JSON.stringify(ko.utils.unwrapObservable(a))},postJson:function(a,b,d){var d=d||{},c=d.params||{},e=
-d.includeFields||this.fieldsIncludedWithJsonPost,g=a;if("object"==typeof a&&"FORM"==a.tagName)for(var g=a.action,f=e.length-1;0<=f;f--)for(var i=ko.utils.getFormFields(a,e[f]),h=i.length-1;0<=h;h--)c[i[h].name]=i[h].value;var b=ko.utils.unwrapObservable(b),j=document.createElement("FORM");j.style.display="none";j.action=g;j.method="post";for(var q in b)a=document.createElement("INPUT"),a.name=q,a.value=ko.utils.stringifyJson(ko.utils.unwrapObservable(b[q])),j.appendChild(a);for(q in c)a=document.createElement("INPUT"),
-a.name=q,a.value=c[q],j.appendChild(a);document.body.appendChild(j);d.submitter?d.submitter(j):j.submit();setTimeout(function(){j.parentNode.removeChild(j)},0)}}};ko.exportSymbol("ko.utils",ko.utils);ko.exportSymbol("ko.utils.arrayForEach",ko.utils.arrayForEach);ko.exportSymbol("ko.utils.arrayFirst",ko.utils.arrayFirst);ko.exportSymbol("ko.utils.arrayFilter",ko.utils.arrayFilter);ko.exportSymbol("ko.utils.arrayGetDistinctValues",ko.utils.arrayGetDistinctValues);
-ko.exportSymbol("ko.utils.arrayIndexOf",ko.utils.arrayIndexOf);ko.exportSymbol("ko.utils.arrayMap",ko.utils.arrayMap);ko.exportSymbol("ko.utils.arrayPushAll",ko.utils.arrayPushAll);ko.exportSymbol("ko.utils.arrayRemoveItem",ko.utils.arrayRemoveItem);ko.exportSymbol("ko.utils.fieldsIncludedWithJsonPost",ko.utils.fieldsIncludedWithJsonPost);ko.exportSymbol("ko.utils.getElementsHavingAttribute",ko.utils.getElementsHavingAttribute);ko.exportSymbol("ko.utils.getFormFields",ko.utils.getFormFields);
-ko.exportSymbol("ko.utils.postJson",ko.utils.postJson);ko.exportSymbol("ko.utils.parseJson",ko.utils.parseJson);ko.exportSymbol("ko.utils.registerEventHandler",ko.utils.registerEventHandler);ko.exportSymbol("ko.utils.stringifyJson",ko.utils.stringifyJson);ko.exportSymbol("ko.utils.range",ko.utils.range);ko.exportSymbol("ko.utils.toggleDomNodeCssClass",ko.utils.toggleDomNodeCssClass);ko.exportSymbol("ko.utils.triggerEvent",ko.utils.triggerEvent);ko.exportSymbol("ko.utils.unwrapObservable",ko.utils.unwrapObservable);
-Function.prototype.bind||(Function.prototype.bind=function(a){var c=this,d=Array.prototype.slice.call(arguments),a=d.shift();return function(){return c.apply(a,d.concat(Array.prototype.slice.call(arguments)))}});
-ko.utils.domData=new function(){var a=0,c="__ko__"+(new Date).getTime(),d={};return{get:function(a,d){var c=ko.utils.domData.getAll(a,!1);return void 0===c?void 0:c[d]},set:function(a,d,c){void 0===c&&void 0===ko.utils.domData.getAll(a,!1)||(ko.utils.domData.getAll(a,!0)[d]=c)},getAll:function(b,e){var f=b[c];if(!f){if(!e)return;f=b[c]="ko"+a++;d[f]={}}return d[f]},clear:function(a){var e=a[c];e&&(delete d[e],a[c]=null)}}};
-ko.utils.domNodeDisposal=new function(){function a(a,c){var f=ko.utils.domData.get(a,d);void 0===f&&c&&(f=[],ko.utils.domData.set(a,d,f));return f}function c(b){sko.cleanNode(b);var d=a(b,!1);if(d)for(var d=d.slice(0),c=0;c<d.length;c++)d[c](b);ko.utils.domData.clear(b);"function"==typeof jQuery&&"function"==typeof jQuery.cleanData&&jQuery.cleanData([b])}var d="__ko_domNodeDisposal__"+(new Date).getTime();return{addDisposeCallback:function(b,d){if("function"!=typeof d)throw Error("Callback must be a function");
-a(b,!0).push(d)},removeDisposeCallback:function(b,c){var f=a(b,!1);f&&(ko.utils.arrayRemoveItem(f,c),0==f.length&&ko.utils.domData.set(b,d,void 0))},cleanNode:function(a){if(!(1!=a.nodeType&&9!=a.nodeType)){c(a);var d=[];ko.utils.arrayPushAll(d,a.getElementsByTagName("*"));for(var a=0,f=d.length;a<f;a++)c(d[a])}},removeNode:function(a){ko.cleanNode(a);a.parentNode&&a.parentNode.removeChild(a)}}};ko.cleanNode=ko.utils.domNodeDisposal.cleanNode;ko.removeNode=ko.utils.domNodeDisposal.removeNode;
-ko.exportSymbol("ko.cleanNode",ko.cleanNode);ko.exportSymbol("ko.removeNode",ko.removeNode);ko.exportSymbol("ko.utils.domNodeDisposal",ko.utils.domNodeDisposal);ko.exportSymbol("ko.utils.domNodeDisposal.addDisposeCallback",ko.utils.domNodeDisposal.addDisposeCallback);ko.exportSymbol("ko.utils.domNodeDisposal.removeDisposeCallback",ko.utils.domNodeDisposal.removeDisposeCallback);
-(function(){ko.utils.parseHtmlFragment=function(a){if("undefined"!=typeof jQuery)a=jQuery.clean([a]);else{var c=ko.utils.stringTrim(a).toLowerCase(),d=document.createElement("div"),c=c.match(/^<(thead|tbody|tfoot)/)&&[1,"<table>","</table>"]||!c.indexOf("<tr")&&[2,"<table><tbody>","</tbody></table>"]||(!c.indexOf("<td")||!c.indexOf("<th"))&&[3,"<table><tbody><tr>","</tr></tbody></table>"]||[0,"",""];for(d.innerHTML=c[1]+a+c[2];c[0]--;)d=d.lastChild;a=ko.utils.makeArray(d.childNodes)}return a};ko.utils.setHtml=
-function(a,c){ko.utils.emptyDomNode(a);if(null!==c&&void 0!==c)if("string"!=typeof c&&(c=c.toString()),"undefined"!=typeof jQuery)try{jQuery(a).html(c)}catch(d){jQuery(a).html(c.replace("<","&lt;").replace(">","&gt;"))}else for(var b=ko.utils.parseHtmlFragment(c),e=0;e<b.length;e++)a.appendChild(b[e])}})();
-ko.memoization=function(){function a(){return(4294967296*(1+Math.random())|0).toString(16).substring(1)}function c(a,d){if(a)if(8==a.nodeType){var f=ko.memoization.parseMemoText(a.nodeValue);null!=f&&d.push({domNode:a,memoId:f})}else if(1==a.nodeType)for(var f=0,h=a.childNodes,i=h.length;f<i;f++)c(h[f],d)}var d={};return{memoize:function(b){if("function"!=typeof b)throw Error("You can only pass a function to ko.memoization.memoize()");var c=a()+a();d[c]=b;return"<\!--[ko_memo:"+c+"]--\>"},unmemoize:function(a,
-c){var f=d[a];if(void 0===f)throw Error("Couldn't find any memo with ID "+a+". Perhaps it's already been unmemoized.");try{return f.apply(null,c||[]),!0}finally{delete d[a]}},unmemoizeDomNodeAndDescendants:function(a,d){var f=[];c(a,f);for(var h=0,i=f.length;h<i;h++){var g=f[h].domNode,j=[g];d&&ko.utils.arrayPushAll(j,d);var k=d[0];sko.traceResources(a,k,function(){sko.traceRelations(a,k,function(){try{f[h]&&(ko.memoization.unmemoize(f[h].memoId,j),g.nodeValue=""),g.parentNode&&g.parentNode.removeChild(g)}catch(a){}})})}},
-parseMemoText:function(a){return(a=a.match(/^\[ko_memo\:(.*?)\]$/))?a[1]:null}}}();ko.exportSymbol("ko.memoization",ko.memoization);ko.exportSymbol("ko.memoization.memoize",ko.memoization.memoize);ko.exportSymbol("ko.memoization.unmemoize",ko.memoization.unmemoize);ko.exportSymbol("ko.memoization.parseMemoText",ko.memoization.parseMemoText);ko.exportSymbol("ko.memoization.unmemoizeDomNodeAndDescendants",ko.memoization.unmemoizeDomNodeAndDescendants);
-ko.subscription=function(a,c){this.callback=a;this.dispose=function(){this.isDisposed=!0;c()}.bind(this);ko.exportProperty(this,"dispose",this.dispose)};
-ko.subscribable=function(){var a=[];this.subscribe=function(c,d){var b=d?c.bind(d):c,e=new ko.subscription(b,function(){ko.utils.arrayRemoveItem(a,e)});a.push(e);return e};this.notifySubscribers=function(c){ko.utils.arrayForEach(a.slice(0),function(a){a&&!0!==a.isDisposed&&a.callback(c)})};this.getSubscriptionsCount=function(){return a.length};ko.exportProperty(this,"subscribe",this.subscribe);ko.exportProperty(this,"notifySubscribers",this.notifySubscribers);ko.exportProperty(this,"getSubscriptionsCount",
-this.getSubscriptionsCount)};ko.isSubscribable=function(a){return"function"==typeof a.subscribe&&"function"==typeof a.notifySubscribers};ko.exportSymbol("ko.subscribable",ko.subscribable);ko.exportSymbol("ko.isSubscribable",ko.isSubscribable);ko.dependencyDetection=function(){var a=[];return{begin:function(){a.push([])},end:function(){return a.pop()},registerDependency:function(c){if(!ko.isSubscribable(c))throw"Only subscribable things can act as dependencies";0<a.length&&a[a.length-1].push(c)}}}();
-var primitiveTypes={undefined:!0,"boolean":!0,number:!0,string:!0};function valuesArePrimitiveAndEqual(a,c){return null===a||typeof a in primitiveTypes?a===c:!1}
-ko.observable=function(a){function c(){if(0<arguments.length){if(!c.equalityComparer||!c.equalityComparer(d,arguments[0]))d=arguments[0],c.notifySubscribers(d);return this}ko.dependencyDetection.registerDependency(c);return d}var d=a;c.__ko_proto__=ko.observable;c.valueHasMutated=function(){c.notifySubscribers(d)};c.equalityComparer=valuesArePrimitiveAndEqual;ko.subscribable.call(c);ko.exportProperty(c,"valueHasMutated",c.valueHasMutated);return c};
-ko.isObservable=function(a){return null===a||void 0===a||void 0===a.__ko_proto__?!1:a.__ko_proto__===ko.observable?!0:ko.isObservable(a.__ko_proto__)};ko.isWriteableObservable=function(a){return"function"==typeof a&&a.__ko_proto__===ko.observable||"function"==typeof a&&a.__ko_proto__===ko.dependentObservable&&a.hasWriteFunction?!0:!1};ko.exportSymbol("ko.observable",ko.observable);ko.exportSymbol("ko.isObservable",ko.isObservable);ko.exportSymbol("ko.isWriteableObservable",ko.isWriteableObservable);
-ko.observableArray=function(a){0==arguments.length&&(a=[]);if(null!==a&&void 0!==a&&!("length"in a))throw Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");var c=new ko.observable(a);ko.utils.arrayForEach("pop,push,reverse,shift,sort,splice,unshift".split(","),function(a){c[a]=function(){var b=c(),b=b[a].apply(b,arguments);c.valueHasMutated();return b}});ko.utils.arrayForEach(["slice"],function(a){c[a]=function(){var b=c();return b[a].apply(b,
-arguments)}});c.remove=function(a){for(var b=c(),e=[],f=[],h="function"==typeof a?a:function(b){return b===a},i=0,g=b.length;i<g;i++){var j=b[i];h(j)?f.push(j):e.push(j)}c(e);return f};c.removeAll=function(a){if(void 0===a){var b=c();c([]);return b}return!a?[]:c.remove(function(b){return 0<=ko.utils.arrayIndexOf(a,b)})};c.destroy=function(a){for(var b=c(),e="function"==typeof a?a:function(b){return b===a},f=b.length-1;0<=f;f--)e(b[f])&&(b[f]._destroy=!0);c.valueHasMutated()};c.destroyAll=function(a){return void 0===
-a?c.destroy(function(){return!0}):!a?[]:c.destroy(function(b){return 0<=ko.utils.arrayIndexOf(a,b)})};c.indexOf=function(a){var b=c();return ko.utils.arrayIndexOf(b,a)};c.replace=function(a,b){var e=c.indexOf(a);0<=e&&(c()[e]=b,c.valueHasMutated())};ko.exportProperty(c,"remove",c.remove);ko.exportProperty(c,"removeAll",c.removeAll);ko.exportProperty(c,"destroy",c.destroy);ko.exportProperty(c,"destroyAll",c.destroyAll);ko.exportProperty(c,"indexOf",c.indexOf);return c};
-ko.exportSymbol("ko.observableArray",ko.observableArray);
-ko.dependentObservable=function(a,c,d){function b(){ko.utils.arrayForEach(l,function(a){a.dispose()});l=[]}function e(a){b();ko.utils.arrayForEach(a,function(a){l.push(a.subscribe(f))})}function f(){if(g&&"function"==typeof d.disposeWhen&&d.disposeWhen())h.dispose();else{try{ko.dependencyDetection.begin(),i=d.owner?d.read.call(d.owner):d.read()}finally{var a=ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());e(a)}h.notifySubscribers(i);g=!0}}function h(){if(0<arguments.length)if("function"===
-typeof d.write){var a=arguments[0];d.owner?d.write.call(d.owner,a):d.write(a)}else throw"Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";else return g||f(),ko.dependencyDetection.registerDependency(h),i}var i,g=!1;a&&"object"==typeof a?d=a:(d=d||{},d.read=a||d.read,d.owner=c||d.owner);if("function"!=typeof d.read)throw"Pass a function that returns the value of the dependentObservable";var j="object"==
-typeof d.disposeWhenNodeIsRemoved?d.disposeWhenNodeIsRemoved:null,k=null;if(j){k=function(){h.dispose()};ko.utils.domNodeDisposal.addDisposeCallback(j,k);var m=d.disposeWhen;d.disposeWhen=function(){return!ko.utils.domNodeIsAttachedToDocument(j)||"function"==typeof m&&m()}}var l=[];h.__ko_proto__=ko.dependentObservable;h.getDependenciesCount=function(){return l.length};h.hasWriteFunction="function"===typeof d.write;h.dispose=function(){j&&ko.utils.domNodeDisposal.removeDisposeCallback(j,k);b()};ko.subscribable.call(h);
-!0!==d.deferEvaluation&&f();ko.exportProperty(h,"dispose",h.dispose);ko.exportProperty(h,"getDependenciesCount",h.getDependenciesCount);return h};ko.dependentObservable.__ko_proto__=ko.observable;ko.exportSymbol("ko.dependentObservable",ko.dependentObservable);
-(function(){function a(b,e,f){f=f||new d;b=e(b);if(!("object"==typeof b&&null!==b&&void 0!==b))return b;var h=b instanceof Array?[]:{};f.save(b,h);c(b,function(d){var c=e(b[d]);switch(typeof c){case "boolean":case "number":case "string":case "function":h[d]=c;break;case "object":case "undefined":var j=f.get(c);h[d]=void 0!==j?j:a(c,e,f)}});return h}function c(a,d){if(a instanceof Array)for(var c=0;c<a.length;c++)d(c);else for(c in a)d(c)}function d(){var a=[],d=[];this.save=function(c,h){var i=ko.utils.arrayIndexOf(a,
-c);0<=i?d[i]=h:(a.push(c),d.push(h))};this.get=function(c){c=ko.utils.arrayIndexOf(a,c);return 0<=c?d[c]:void 0}}ko.toJS=function(b){if(0==arguments.length)throw Error("When calling ko.toJS, pass the object you want to convert.");return a(b,function(a){for(var b=0;ko.isObservable(a)&&10>b;b++)a=a();return a})};ko.toJSON=function(a){a=ko.toJS(a);return ko.utils.stringifyJson(a)}})();ko.exportSymbol("ko.toJS",ko.toJS);ko.exportSymbol("ko.toJSON",ko.toJSON);
-(function(){ko.selectExtensions={readValue:function(a){return"OPTION"==a.tagName?!0===a.__ko__hasDomDataOptionValue__?ko.utils.domData.get(a,ko.bindingHandlers.options.optionValueDomDataKey):a.getAttribute("value"):"SELECT"==a.tagName?0<=a.selectedIndex?ko.selectExtensions.readValue(a.options[a.selectedIndex]):void 0:a.value},writeValue:function(a,c){if("OPTION"==a.tagName)switch(typeof c){case "string":case "number":ko.utils.domData.set(a,ko.bindingHandlers.options.optionValueDomDataKey,void 0);
-"__ko__hasDomDataOptionValue__"in a&&delete a.__ko__hasDomDataOptionValue__;a.value=c;break;default:ko.utils.domData.set(a,ko.bindingHandlers.options.optionValueDomDataKey,c),a.__ko__hasDomDataOptionValue__=!0,a.value=""}else if("SELECT"==a.tagName)for(var d=a.options.length-1;0<=d;d--){if(ko.selectExtensions.readValue(a.options[d])==c){a.selectedIndex=d;break}}else{if(null===c||void 0===c)c="";a.value=c}}}})();ko.exportSymbol("ko.selectExtensions",ko.selectExtensions);
-ko.exportSymbol("ko.selectExtensions.readValue",ko.selectExtensions.readValue);ko.exportSymbol("ko.selectExtensions.writeValue",ko.selectExtensions.writeValue);
-ko.jsonExpressionRewriting=function(){function a(a,b){return a.replace(d,function(a,d){return b[d]})}function c(a){return 0<=ko.utils.arrayIndexOf(e,ko.utils.stringTrim(a).toLowerCase())?!1:"<"==a[0]&&">"==a[a.length-1]?!0:null!==a.match(b)}var d=/\[ko_token_(\d+)\]/g,b=/^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i,e=["true","false"];return{parseJson:function(b){b=ko.utils.stringTrim(b);if(3>b.length)return{};for(var d=[],c=null,g,e,k="{"==b.charAt(0)?1:0;k<b.length;k++){var m=
-b.charAt(k);if(null===c)switch(m){case '"':case "'":case "/":c=k;g=m;break;case "<":c=k;g=">";break;case "{":c=k;e=1;g="}";break;case "[":c=k,g="]"}else if("}"==g&&"{"==m)e++;else if("}"==g&&"}"==m&&1<e)e--;else if(m==g){m=b.substring(c,k+1);d.push(m);var l="[ko_token_"+(d.length-1)+"]",b=b.substring(0,c)+l+b.substring(k+1),k=k-(m.length-l.length),c=null}}c={};b=b.split(",");g=0;for(e=b.length;g<e;g++)m=b[g],l=m.indexOf(":"),0<l&&l<m.length-1&&(k=ko.utils.stringTrim(m.substring(0,l)),m=ko.utils.stringTrim(m.substring(l+
-1)),"{"==k.charAt(0)&&(k=k.substring(1)),"}"==m.charAt(m.length-1)&&(m=m.substring(0,m.length-1)),k=ko.utils.stringTrim(a(k,d)),m=ko.utils.stringTrim(a(m,d)),c[k]=m);return c},insertPropertyAccessorsIntoJson:function(a){var b=ko.jsonExpressionRewriting.parseJson(a),d=[],g;for(g in b){var e=b[g];c(e)&&(0<d.length&&d.push(", "),d.push(g+" : function(__ko_value) { "+e+" = __ko_value; }"))}0<d.length&&(b=d.join(""),a=a+", '_ko_property_writers' : { "+b+" } ");return a},parseURIsInJSONString:function(a){for(var b=
-/["']?(<|\[)[a-z:\/.#?&%]+(\]|>)['"]?/g,d="",c=b.exec(a);null!=c;){if(("'"===c[0][0]||'"'===c[0][0])&&("'"===c[0][c[0].length-1]||'"'===c[0][c[0].length-1]))a=a.split(c[0]),d=d+a[0]+c[0],a=a[1];else var e=c[0],c=c.index,d=a.substring(0,c)+"sko.current().tryProperty('"+e+"')",a=a.substring(c+e.length);c=b.exec(a)}return d+a},insertPropertyReaderWritersIntoJson:function(a){var a=ko.jsonExpressionRewriting.parseJson(a),b=[],d="",e=!0,j;for(j in a){var k=a[j],k=this.parseURIsInJSONString(k);c(k)&&(0<
-b.length&&b.push(", "),"<"===k[0]&&">"===k[k.length-1]&&"about"!==j&&"rel"!==j?b.push(j+" : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('"+k+"') = __ko_value; }"):null!=k.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/)&&"about"!==j&&"rel"!==j?b.push(j+" : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('"+k+"') = __ko_value; }"):"<"===k[0]&&">"===k[k.length-
-1]&&("about"===j||"rel"===j)||"["===k[0]&&"]"===k[k.length-1]&&("about"===j||"rel"===j)||(/tryProperty\([^)]+\)$/.test(k)||/prop\([^)]+\)$/.test(k)?b.push(j+" : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; "+k+"(__ko_value); }"):b.push(j+" : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; "+k+" = __ko_value; }")));e?e=!1:d+=", ";d="<"===k[0]&&">"===k[k.length-1]&&"about"!==j&&"rel"!==j?d+j+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+
-k+"') })()":null!=k.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/)&&"about"!==j&&"rel"!==j?d+j+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+k+"') })()":"<"===k[0]&&">"===k[k.length-1]&&("about"===j||"rel"===j)?d+j+": '"+k.slice(1,k.length-1)+"'":null!=k.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/)&&("about"===j||"rel"===j)?d+j+": sko.rdf.prefixes.resolve('"+k.slice(1,k.length-1)+"')":d+j+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return "+
-k+" })()"}a=d;0<b.length&&(b=b.join(""),a=a+", '_ko_property_writers' : { "+b+" } ");return a}}}();ko.exportSymbol("ko.jsonExpressionRewriting",ko.jsonExpressionRewriting);ko.exportSymbol("ko.jsonExpressionRewriting.parseJson",ko.jsonExpressionRewriting.parseJson);ko.exportSymbol("ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson",ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);ko.exportSymbol("ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson",ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson);
-(function(){ko.bindingHandlers={};ko.applyBindingsToNode=function(a,c,d,b){function e(a){return function(){return i[a]}}function f(){return i}var h=!0,b=b||"data-bind",i;new ko.dependentObservable(function(){var g;if("function"==typeof c){d.skonode=a;with(d)g=c()}else g=c;if(!g)a:{var j=a.getAttribute(b);try{var k=" { "+ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(j)+" } ";g=ko.utils.evalWithinScope(k,null===d?window:d,a);break a}catch(m){"undefined"!==typeof console&&(console.log("!!! ERROR"),
-console.log(j),console.log(m))}g=void 0}i=g;if(h)for(var l in i)ko.bindingHandlers[l]&&"function"==typeof ko.bindingHandlers[l].init&&(k=e(l),(0,ko.bindingHandlers[l].init)(a,k,f,d));for(l in i)ko.bindingHandlers[l]&&"function"==typeof ko.bindingHandlers[l].update&&(k=e(l),(0,ko.bindingHandlers[l].update)(a,k,f,d))},null,{disposeWhenNodeIsRemoved:a});h=!1};ko.applyBindings=function(a,c){if(c&&void 0==c.nodeType)throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
-var c=c||window.document.body,d=ko.utils.getElementsHavingAttribute(c,"data-bind");ko.utils.arrayForEach(d,function(b){ko.applyBindingsToNode(b,null,a)})};ko.exportSymbol("ko.bindingHandlers",ko.bindingHandlers);ko.exportSymbol("ko.applyBindings",ko.applyBindings);ko.exportSymbol("ko.applyBindingsToNode",ko.applyBindingsToNode)})();var eventHandlersWithShortcuts=["click"];
-ko.utils.arrayForEach(eventHandlersWithShortcuts,function(a){ko.bindingHandlers[a]={init:function(c,d,b,e){return ko.bindingHandlers.event.init.call(this,c,function(){var b={};b[a]=d();return b},b,e)}}});
-ko.bindingHandlers.event={init:function(a,c,d,b){var e=c()||{},f;for(f in e)(function(){var e=f;"string"==typeof e&&ko.utils.registerEventHandler(a,e,function(a){var g,f=c()[e];if(f){var k=d();try{g=f.apply(b,arguments)}finally{!0!==g&&(a.preventDefault?a.preventDefault():a.returnValue=!1)}!1===k[e+"Bubble"]&&(a.cancelBubble=!0,a.stopPropagation&&a.stopPropagation())}})})()}};
-ko.bindingHandlers.submit={init:function(a,c,d,b){if("function"!=typeof c())throw Error("The value for a submit binding must be a function to invoke on submit");ko.utils.registerEventHandler(a,"submit",function(d){var f,h=c();try{f=h.call(b,a)}finally{!0!==f&&(d.preventDefault?d.preventDefault():d.returnValue=!1)}})}};ko.bindingHandlers.visible={update:function(a,c){var d=ko.utils.unwrapObservable(c()),b="none"!=a.style.display;d&&!b?a.style.display="":!d&&b&&(a.style.display="none")}};
-ko.bindingHandlers.enable={update:function(a,c){var d=ko.utils.unwrapObservable(c());d&&a.disabled?a.removeAttribute("disabled"):!d&&!a.disabled&&(a.disabled=!0)}};ko.bindingHandlers.disable={update:function(a,c){ko.bindingHandlers.enable.update(a,function(){return!ko.utils.unwrapObservable(c())})}};
-ko.bindingHandlers.value={init:function(a,c,d){var b=["change"],e=d().valueUpdate;e&&("string"==typeof e&&(e=[e]),ko.utils.arrayPushAll(b,e),b=ko.utils.arrayGetDistinctValues(b));ko.utils.arrayForEach(b,function(b){var e=!1;ko.utils.stringStartsWith(b,"after")&&(e=!0,b=b.substring(5));var i=e?function(a){setTimeout(a,0)}:function(a){a()};ko.utils.registerEventHandler(a,b,function(){i(function(){var b=c(),e=ko.selectExtensions.readValue(a);ko.isWriteableObservable(b)?b(e):(b=d(),b._ko_property_writers&&
-b._ko_property_writers.value&&b._ko_property_writers.value(e))})})})},update:function(a,c){var d=ko.utils.unwrapObservable(c()),b=ko.selectExtensions.readValue(a),e=d!=b;0===d&&0!==b&&"0"!==b&&(e=!0);e&&(b=function(){ko.selectExtensions.writeValue(a,d)},b(),"SELECT"==a.tagName&&setTimeout(b,0));"SELECT"==a.tagName&&(b=ko.selectExtensions.readValue(a),b!==d&&ko.utils.triggerEvent(a,"change"))}};
-ko.bindingHandlers.options={update:function(a,c,d){if("SELECT"!=a.tagName)throw Error("options binding applies only to SELECT elements");var b=ko.utils.arrayMap(ko.utils.arrayFilter(a.childNodes,function(a){return a.tagName&&"OPTION"==a.tagName&&a.selected}),function(a){return ko.selectExtensions.readValue(a)||a.innerText||a.textContent}),e=a.scrollTop,f=ko.utils.unwrapObservable(c());ko.utils.emptyDomNode(a);if(f){var h=d();"number"!=typeof f.length&&(f=[f]);if(h.optionsCaption){var i=document.createElement("OPTION");
-i.innerHTML=h.optionsCaption;ko.selectExtensions.writeValue(i,void 0);a.appendChild(i)}d=0;for(c=f.length;d<c;d++){var i=document.createElement("OPTION"),g="string"==typeof h.optionsValue?f[d][h.optionsValue]:f[d],g=ko.utils.unwrapObservable(g);ko.selectExtensions.writeValue(i,g);var j=h.optionsText;optionText="function"==typeof j?j(f[d]):"string"==typeof j?f[d][j]:g;if(null===optionText||void 0===optionText)optionText="";optionText=ko.utils.unwrapObservable(optionText).toString();"string"==typeof i.innerText?
-i.innerText=optionText:i.textContent=optionText;a.appendChild(i)}f=a.getElementsByTagName("OPTION");d=h=0;for(c=f.length;d<c;d++)0<=ko.utils.arrayIndexOf(b,ko.selectExtensions.readValue(f[d]))&&(ko.utils.setOptionNodeSelectionState(f[d],!0),h++);e&&(a.scrollTop=e)}}};ko.bindingHandlers.options.optionValueDomDataKey="__ko.bindingHandlers.options.optionValueDomData__";
-ko.bindingHandlers.selectedOptions={getSelectedValuesFromSelectNode:function(a){for(var c=[],a=a.childNodes,d=0,b=a.length;d<b;d++){var e=a[d];"OPTION"==e.tagName&&e.selected&&c.push(ko.selectExtensions.readValue(e))}return c},init:function(a,c,d){ko.utils.registerEventHandler(a,"change",function(){var a=c();ko.isWriteableObservable(a)?a(ko.bindingHandlers.selectedOptions.getSelectedValuesFromSelectNode(this)):(a=d(),a._ko_property_writers&&a._ko_property_writers.value&&a._ko_property_writers.value(ko.bindingHandlers.selectedOptions.getSelectedValuesFromSelectNode(this)))})},
-update:function(a,c){if("SELECT"!=a.tagName)throw Error("values binding applies only to SELECT elements");var d=ko.utils.unwrapObservable(c());if(d&&"number"==typeof d.length)for(var b=a.childNodes,e=0,f=b.length;e<f;e++){var h=b[e];"OPTION"==h.tagName&&ko.utils.setOptionNodeSelectionState(h,0<=ko.utils.arrayIndexOf(d,ko.selectExtensions.readValue(h)))}}};
-ko.bindingHandlers.text={update:function(a,c){var d=ko.utils.unwrapObservable(c());if(null===d||void 0===d)d="";"string"==typeof a.innerText?a.innerText=d:a.textContent=d}};ko.bindingHandlers.html={update:function(a,c){var d=ko.utils.unwrapObservable(c());ko.utils.setHtml(a,d)}};ko.bindingHandlers.css={update:function(a,c){var d=ko.utils.unwrapObservable(c()||{}),b;for(b in d)if("string"==typeof b){var e=ko.utils.unwrapObservable(d[b]);ko.utils.toggleDomNodeCssClass(a,b,e)}}};
-ko.bindingHandlers.style={update:function(a,c){var d=ko.utils.unwrapObservable(c()||{}),b;for(b in d)if("string"==typeof b){var e=ko.utils.unwrapObservable(d[b]);a.style[b]=e||""}}};ko.bindingHandlers.uniqueName={init:function(a,c){c()&&(a.name="ko_unique_"+ ++ko.bindingHandlers.uniqueName.currentIndex,ko.utils.isIe6&&a.mergeAttributes(document.createElement("<input name='"+a.name+"'/>"),!1))}};ko.bindingHandlers.uniqueName.currentIndex=0;
-ko.bindingHandlers.checked={init:function(a,c,d){ko.utils.registerEventHandler(a,"click",function(){var b;if("checkbox"==a.type)b=a.checked;else if("radio"==a.type&&a.checked)b=a.value;else return;var e=c();"checkbox"==a.type&&ko.utils.unwrapObservable(e)instanceof Array?(b=ko.utils.arrayIndexOf(ko.utils.unwrapObservable(e),a.value),a.checked&&0>b?e.push(a.value):!a.checked&&0<=b&&e.splice(b,1)):ko.isWriteableObservable(e)?e()!==b&&e(b):(e=d(),e._ko_property_writers&&e._ko_property_writers.checked&&
-e._ko_property_writers.checked(b))});"radio"==a.type&&!a.name&&ko.bindingHandlers.uniqueName.init(a,function(){return!0})},update:function(a,c){var d=ko.utils.unwrapObservable(c());"checkbox"==a.type?(a.checked=d instanceof Array?0<=ko.utils.arrayIndexOf(d,a.value):d,d&&ko.utils.isIe6&&a.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"),!1)):"radio"==a.type&&(a.checked=a.value==d,a.value==d&&(ko.utils.isIe6||ko.utils.isIe7)&&a.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"),
-!1))}};ko.bindingHandlers.attr={update:function(a,c){var d=ko.utils.unwrapObservable(c())||{},b;for(b in d)if("string"==typeof b){var e=ko.utils.unwrapObservable(d[b]);if(!1===e||null===e||void 0===e)a.removeAttribute(b);else var f=e.toString();f&&("<"===f[0]&&">"===f[f.length-1]&&(f=f.substring(1,f.length-1)),a.setAttribute(b,f))}}};
-ko.templateEngine=function(){this.renderTemplate=function(){throw"Override renderTemplate in your ko.templateEngine subclass";};this.isTemplateRewritten=function(){throw"Override isTemplateRewritten in your ko.templateEngine subclass";};this.rewriteTemplate=function(){throw"Override rewriteTemplate in your ko.templateEngine subclass";};this.createJavaScriptEvaluatorBlock=function(){throw"Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";}};
-ko.exportSymbol("ko.templateEngine",ko.templateEngine);
-ko.templateRewriting=function(){var a=/(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;return{ensureTemplateIsRewritten:function(a,d){d.isTemplateRewritten(a)||d.rewriteTemplate(a,function(a){return ko.templateRewriting.memoizeBindingAttributeSyntax(a,d)})},memoizeBindingAttributeSyntax:function(c,d){return c.replace(a,function(a,c,f,h,i,g,j){a=ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(j);return d.createJavaScriptEvaluatorBlock("ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() {                     return (function() { var innerNode=skonode; return { "+
-a+" } })()                 })")+c})},applyMemoizedBindingsToNextSibling:function(a){return ko.memoization.memoize(function(d,b){d.nextSibling&&sko.traceResources(d.nextSibling,b,function(){sko.traceRelations(d.nextSibling,b,function(){ko.applyBindingsToNode(d.nextSibling,a,b)})})})}}}();ko.exportSymbol("ko.templateRewriting",ko.templateRewriting);ko.exportSymbol("ko.templateRewriting.applyMemoizedBindingsToNextSibling",ko.templateRewriting.applyMemoizedBindingsToNextSibling);
-(function(){function a(a,b,e,f,h){var i=ko.utils.unwrapObservable(f),h=h||{},g=h.templateEngine||c;ko.templateRewriting.ensureTemplateIsRewritten(e,g);e=g.renderTemplate(e,i,h);if("number"!=typeof e.length||0<e.length&&"number"!=typeof e[0].nodeType)throw"Template engine must return an array of DOM nodes";switch(b){case "replaceChildren":ko.utils.setDomNodeChildren(a,e);break;case "replaceNode":ko.utils.replaceDomNodes(a,e);break;case "ignoreTargetNode":break;default:throw Error("Unknown renderMode: "+
-b);}e&&ko.utils.arrayForEach(e,function(a){ko.memoization.unmemoizeDomNodeAndDescendants(a,[f])});h.afterRender&&h.afterRender(e,f);return e}var c;ko.setTemplateEngine=function(a){if(void 0!=a&&!(a instanceof ko.templateEngine))throw"templateEngine must inherit from ko.templateEngine";c=a};ko.renderTemplate=function(d,b,e,f,h){e=e||{};if(void 0==(e.templateEngine||c))throw"Set a template engine before calling renderTemplate";h=h||"replaceChildren";if(f){var i=f.nodeType?f:0<f.length?f[0]:null;return new ko.dependentObservable(function(){var c=
-"function"==typeof d?d(b):d,c=a(f,h,c,b,e);"replaceNode"==h&&(f=c,i=f.nodeType?f:0<f.length?f[0]:null)},null,{disposeWhen:function(){return!i||!ko.utils.domNodeIsAttachedToDocument(i)},disposeWhenNodeIsRemoved:i&&"replaceNode"==h?i.parentNode:i})}return ko.memoization.memoize(function(a){ko.renderTemplate(d,b,e,a,"replaceNode")})};ko.renderTemplateForEach=function(d,b,c,f){return new ko.dependentObservable(function(){var h=ko.utils.unwrapObservable(b)||[];h.constructor!=Array&&(h=[h]);for(var i=0;i<
-h.length;i++)if("number"===typeof h[i]||"string"===typeof h[i]){var g={$value:h[i]},j;for(j in viewModel)g[j]=viewModel[j];h[i]=g}h=ko.utils.arrayFilter(h,function(a){return c.includeDestroyed||!a._destroy});ko.utils.setDomNodeChildrenFromArrayMapping(f,h,function(b){var g="function"==typeof d?d(b):d;return a(null,"ignoreTargetNode",g,b,c)},c)},null,{disposeWhenNodeIsRemoved:f})};ko.bindingHandlers.template={update:function(a,b,c,f){b=ko.utils.unwrapObservable(b());c="string"==typeof b?b:b.name;if("undefined"!=
-typeof b.foreach)f=ko.renderTemplateForEach(c,b.foreach||[],{templateOptions:b.templateOptions,afterAdd:b.afterAdd,beforeRemove:b.beforeRemove,includeDestroyed:b.includeDestroyed,afterRender:b.afterRender},a);else var h=b.data,f=ko.renderTemplate(c,"undefined"==typeof h?f:h,{templateOptions:b.templateOptions,afterRender:b.afterRender},a);(b=ko.utils.domData.get(a,"__ko__templateSubscriptionDomDataKey__"))&&"function"==typeof b.dispose&&b.dispose();ko.utils.domData.set(a,"__ko__templateSubscriptionDomDataKey__",
-f)}}})();ko.exportSymbol("ko.setTemplateEngine",ko.setTemplateEngine);ko.exportSymbol("ko.renderTemplate",ko.renderTemplate);
-(function(){ko.utils.compareArrays=function(a,c,d){if(void 0===d)return ko.utils.compareArrays(a,c,1)||ko.utils.compareArrays(a,c,10)||ko.utils.compareArrays(a,c,Number.MAX_VALUE);for(var a=a||[],c=c||[],b=a,e=c,f=[],h=0;h<=e.length;h++)f[h]=[];for(var h=0,i=Math.min(b.length,d);h<=i;h++)f[0][h]=h;h=1;for(i=Math.min(e.length,d);h<=i;h++)f[h][0]=h;for(var i=b.length,g,j=e.length,h=1;h<=i;h++){g=Math.max(1,h-d);for(var k=Math.min(j,h+d);g<=k;g++)f[g][h]=b[h-1]===e[g-1]?f[g-1][h-1]:Math.min(void 0===
-f[g-1][h]?Number.MAX_VALUE:f[g-1][h]+1,void 0===f[g][h-1]?Number.MAX_VALUE:f[g][h-1]+1)}d=a.length;b=c.length;e=[];h=f[b][d];if(void 0===h)f=null;else{for(;0<d||0<b;){i=f[b][d];j=0<b?f[b-1][d]:h+1;k=0<d?f[b][d-1]:h+1;g=0<b&&0<d?f[b-1][d-1]:h+1;if(void 0===j||j<i-1)j=h+1;if(void 0===k||k<i-1)k=h+1;g<i-1&&(g=h+1);j<=k&&j<g?(e.push({status:"added",value:c[b-1]}),b--):(k<j&&k<g?e.push({status:"deleted",value:a[d-1]}):(e.push({status:"retained",value:a[d-1]}),b--),d--)}f=e.reverse()}return f}})();
-ko.exportSymbol("ko.utils.compareArrays",ko.utils.compareArrays);
-(function(){function a(a,d,b){var e=[],a=ko.dependentObservable(function(){var a=d(b)||[];0<e.length&&ko.utils.replaceDomNodes(e,a);e.splice(0,e.length);ko.utils.arrayPushAll(e,a)},null,{disposeWhenNodeIsRemoved:a,disposeWhen:function(){return 0==e.length||!ko.utils.domNodeIsAttachedToDocument(e[0])}});return{mappedNodes:e,dependentObservable:a}}ko.utils.setDomNodeChildrenFromArrayMapping=function(c,d,b,e){for(var d=d||[],e=e||{},f=void 0===ko.utils.domData.get(c,"setDomNodeChildrenFromArrayMapping_lastMappingResult"),
-h=ko.utils.domData.get(c,"setDomNodeChildrenFromArrayMapping_lastMappingResult")||[],i=ko.utils.arrayMap(h,function(a){return a.arrayEntry}),g=ko.utils.compareArrays(i,d),d=[],j=0,k=[],i=[],m=null,l=0,r=g.length;l<r;l++)switch(g[l].status){case "retained":var n=h[j];d.push(n);0<n.domNodes.length&&(m=n.domNodes[n.domNodes.length-1]);j++;break;case "deleted":h[j].dependentObservable.dispose();ko.utils.arrayForEach(h[j].domNodes,function(a){k.push({element:a,index:l,value:g[l].value});m=a});j++;break;
-case "added":var o=a(c,b,g[l].value),n=o.mappedNodes;d.push({arrayEntry:g[l].value,domNodes:n,dependentObservable:o.dependentObservable});for(var o=0,s=n.length;o<s;o++){var p=n[o];i.push({element:p,index:l,value:g[l].value});null==m?c.firstChild?c.insertBefore(p,c.firstChild):c.appendChild(p):m.nextSibling?c.insertBefore(p,m.nextSibling):c.appendChild(p);m=p}}ko.utils.arrayForEach(k,function(a){ko.cleanNode(a.element)});b=!1;if(!f){if(e.afterAdd)for(l=0;l<i.length;l++)e.afterAdd(i[l].element,i[l].index,
-i[l].value);if(e.beforeRemove){for(l=0;l<k.length;l++)e.beforeRemove(k[l].element,k[l].index,k[l].value);b=!0}}b||ko.utils.arrayForEach(k,function(a){a.element.parentNode&&a.element.parentNode.removeChild(a.element)});ko.utils.domData.set(c,"setDomNodeChildrenFromArrayMapping_lastMappingResult",d)}})();ko.exportSymbol("ko.utils.setDomNodeChildrenFromArrayMapping",ko.utils.setDomNodeChildrenFromArrayMapping);
-ko.jqueryTmplTemplateEngine=function(){var a;a="undefined"==typeof jQuery||!jQuery.tmpl?0:jQuery.tmpl.tag?jQuery.tmpl.tag.tmpl&&jQuery.tmpl.tag.tmpl.open&&0<=jQuery.tmpl.tag.tmpl.open.toString().indexOf("__")?3:2:1;this.jQueryTmplVersion=a;this.getTemplateNode=function(a){var b=document.getElementById(a);if(null==b)throw Error("Cannot find template with ID="+a);return b};var c=RegExp("__ko_apos__","g");this.renderTemplate=function(a,b,e){e=e||{};if(0==this.jQueryTmplVersion)throw Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
-if(1==this.jQueryTmplVersion)return a='<script type="text/html">'+this.getTemplateNode(a).text+"<\/script>",b=jQuery.tmpl(a,b)[0].text.replace(c,"'"),jQuery.clean([b],document);if(!(a in jQuery.template)){var f=this.getTemplateNode(a).text;jQuery.template(a,f)}b=[b];b=jQuery.tmpl(a,b,e.templateOptions);b.appendTo(document.createElement("div"));jQuery.fragments={};return b};this.isTemplateRewritten=function(a){return a in jQuery.template?!0:!0===this.getTemplateNode(a).isRewritten};this.rewriteTemplate=
-function(a,b){var c=this.getTemplateNode(a),f=b(c.text);1==this.jQueryTmplVersion&&(f=ko.utils.stringTrim(f),f=f.replace(/([\s\S]*?)(\${[\s\S]*?}|{{[\=a-z][\s\S]*?}}|$)/g,function(a,b,d){return b.replace(/\'/g,"__ko_apos__")+d}));c.text=f;c.isRewritten=!0};this.createJavaScriptEvaluatorBlock=function(a){a=function(a){var d=/<\$[^>]*>/g;if(1<a.split(d).length){var c="",h=null;a.replace(d,function(a,b,d){null===h&&(h=d);b=h.split(a);c=c+b[0]+a.replace(/</,"<'+").replace(/>/,"+'>");b.shift();1===b.length?
-c+=b[0]:h=b.join(a)});return c}return a}(a);return 1==this.jQueryTmplVersion?"{{= "+a+"}}":"{{ko_code ((function() { return "+a+" })()) }}"};this.addTemplate=function(a,b){document.write("<script type='text/html' id='"+a+"'>"+b+"<\/script>")};ko.exportProperty(this,"addTemplate",this.addTemplate);1<this.jQueryTmplVersion&&(jQuery.tmpl.tag.ko_code={open:(3>this.jQueryTmplVersion?"_":"__")+".push($1 || '');"})};ko.jqueryTmplTemplateEngine.prototype=new ko.templateEngine;ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine);
-ko.exportSymbol("ko.jqueryTmplTemplateEngine",ko.jqueryTmplTemplateEngine);Utils={stackCounterLimit:1E3,stackCounter:0};Utils.recur=function(a){Utils.stackCounter===Utils.stackCounterLimit?(Utils.stackCounter=0,setTimeout(a,0)):(Utils.stackCounter++,a())};Utils.repeat=function(a,c,d,b,e){4===arguments.length&&(e={});a<c?(e._i=a,d(function(d,e){Utils.recur(function(){Utils.repeat(a+1,c,d,b,e)})},e)):b(e)};SemanticKnockOut={};window.sko=SemanticKnockOut;sko.activeDebug=!1;
-sko.log=function(a){sko.activeDebug&&"undefined"!=typeof console&&console.log&&console.log(a)};sko.VERSION="0.1.0";
-sko.jsonld={coerce:function(a,c,d){null==a["@context"]&&(a["@context"]={});if(null==a["@context"]["@coerce"])a["@context"]["@coerce"]={},a["@context"]["@coerce"][d]=c;else if("string"===typeof a["@context"]["@coerce"][d]&&a["@context"]["@coerce"][d]!=c)a["@context"]["@coerce"][d]=[a["@context"]["@coerce"][d],c];else if("object"===typeof a["@context"]["@coerce"][d]){for(var b=0;b<a["@context"]["@coerce"][d].length;b++)if(a["@context"]["@coerce"][d][b]===c)return a;a["@context"]["@coerce"][d].push(c)}else a["@context"]["@coerce"][d]=
-c;return a},graphToJSONLD:function(a,c){var d={};a.forEach(function(a){var b=a.subject.valueOf(),e=d[b];null==e&&(e={"@subject":b,"@context":{}},d[b]=e);var g=a.predicate.valueOf();"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"===g&&(g="@type");var b=null,j=!1,b=c.prefixes.shrink(g);b!=g&&(j=!0);-1!=b.indexOf("#")?b=b.split("#")[1]:(b=b.split("/"),b=b[b.length-1]);g=a.object.valueOf();null!=e[b]?j?(a=b.split(":")[0],"object"===typeof e[b]?e[b].push(g):(g=[e[b],g],e[b]=g)):null!=e["@context"][b]||
-"@"===b[0]?"object"===typeof e[b]?e[b].push(g):(g=[e[b],g],e[b]=g):(b=a.predicate.valueOf(),null==e[b]?e[b]=g:"object"===typeof e[b]?e[b].push(g):(g=[e[b],g],e[b]=g),"string"===typeof g&&(0==g.indexOf("http://")||0==g.indexOf("https://"))&&sko.jsonld.coerce(e,b,"@iri")):(e[b]=g,"@"!=b[0]&&(j?(a=b.split(":")[0],e["@context"][a]=c.prefixes[a]):e["@context"][b]=a.predicate.valueOf(),"string"===typeof g&&(0==g.indexOf("http://")||0==g.indexOf("https://"))&&sko.jsonld.coerce(e,b,"@iri")))});var b=[],e;
-for(e in d)b.push(d[e]);return b}};sko.Class={};sko.Class.Clone=function(){};sko.Class.registry={};sko.Class.define=function(a,c){sko.Class.registry[sko.NTUri(a.replace(/\s*/g,""))]=c};sko.Class.instance=function(a,c){var d=sko.NTUri(a),b=c||{};sko.Class.Clone.prototype=sko.Class.registry[d];d=new sko.Class.Clone;b.extended=null;for(var e in d)null==b[e]&&(b[e]=d[e]);b.extended&&b.extended();return b};
-sko.Class.check=function(a,c){var d=c||!1,b;for(b in sko.Class.registry)if(sko.log("*** IS INSTANCE OF? "+b),sko.Class.isInstance(a,b))sko.log("Y!"),(d||null==a.classes[b])&&sko.Class.instance(b,a),a.classes[b]=!0;else if(sko.log("N!"),null!=a.classes[b]){delete a.classes[b];for(var e in sko.Class.registry[b])delete a[e]}};
-sko.Class.isInstance=function(a,c){if(0===c.indexOf("ObjectIntersectionOf(")){for(var d=c.slice(0,c.length-1).split("ObjectIntersectionOf(")[1].split(","),b=0;b<d.length;b++)if(sko.log("INTERSECTION CHECKING "+d[b]),!sko.Class.isInstance(a,d[b]))return!1;return!0}if(0===c.indexOf("ObjectUnionOf(")){d=c.slice(0,c.length-1).split("ObjectUnionOf(")[1].split(",");for(b=0;b<d.length;b++)if(sko.Class.isInstance(a,d[b]))return!0;return!1}if(0===c.indexOf("ObjectSomeValuesFrom(")){d=c.slice(0,c.length-1).split("ObjectSomeValuesFrom(")[1];
-sko.log("CHECKIN CLASS URI: "+sko.NTUri(d));for(b in a.valuesMap)sko.log(" - "+b+" ---\> "+a.valuesMap[sko.NTUri(d)]);return null!=a.valuesMap[sko.NTUri(d)]}sko.log("CHECKIN CLASS URI: "+sko.NTUri(c));sko.log(a);for(b in a.classes)sko.log(" - "+b+" ---\> "+a.classes[b]);return!0===a.classes[sko.NTUri(c)]};
-sko.ready=function(){sko.aboutResourceMap={};sko.aboutResourceSubscriptionMap={};sko.Class.registry={};sko.aboutCounter=0;sko.generatorId=0;sko.generatorsMap={};var a=null;2===arguments.length?(sko.store=arguments[0],a=arguments[1],sko.rdf=sko.store.rdf,a(!0)):(a=arguments[0],rdfstore.create(function(c){sko.store=c;sko.store.registerDefaultProfileNamespaces();sko.rdf=sko.store.rdf;a(!0)}))};sko.registerPrefix=function(a,c){sko.store.registerDefaultNamespace(a,c)};sko._blankCounter=0;
-sko.nextBlankLabel=function(){var a="_:sko_"+sko._blankCounter;sko._blankCounter++;return a};sko.aboutResourceMap={};sko.aboutResourceSubscriptionMap={};sko.aboutCounter=0;
-sko.about=function(a,c,d){if(null!=sko.about[a])d(a);else{var b=""+sko.aboutCounter;sko.aboutCounter++;null==a&&(a=sko.nextBlankLabel());if("string"===typeof a){var e=a;sko.store.node(sko.plainUri(e),function(a,c){if(a){sko.log("FOUND RESOURCE: "+e);sko.log(c);sko.log(" FOR "+sko.plainUri(e));sko.log(" ------------\> "+b+" : "+e);sko.aboutResourceMap[b]=new sko.Resource(b,e,c);sko.about[b]=ko.observable(e);var i=sko.about[b].subscribe(function(a){sko.log("*** OBSERVING NODE ABOT ID:"+b+" new value -> "+
-a);null==a&&(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),a=sko.nextBlankLabel());sko.store.node(sko.plainUri(a),function(d,c){if(d){var e=c.toArray()[0].subject.valueOf();sko.log(" ------------\> "+b+" : "+e+" 2");sko.aboutResourceMap[b].about(e)}else sko.log("*** NO RESOURCE FOR URI:"+a),sko.log(" ------------\> "+b+" : "+a+" 3"),sko.aboutResourceMap[b].about(a)})});sko.aboutResourceSubscriptionMap[b]=i}d(b)})}else sko.about[b]=ko.dependentObservable({read:function(){var d=a();sko.log("*** OBSERVABLE READING DEPENDING NODE ABOT ID:"+
-b+" new value -> "+d);null==d&&(sko.log(" ** URI IS BLANK -> GEN BLANK LABEL"),d=sko.nextBlankLabel());return d},write:function(d){sko.log("*** OBSERVABLE WRITING DEPENDING NODE ABOT ID:"+b+" new value -> "+d);null==d&&(sko.log(" ** URI IS BLANK -> GEN BLANK LABEL"),d=sko.nextBlankLabel());a(d)},owner:c}),sko.store.node(sko.plainUri(sko.about[b]()),function(a,c){if(a){sko.log(" ------------\> "+b+" : "+c+" 4");sko.aboutResourceMap[b]=new sko.Resource(b,sko.about[b](),c);var e=sko.about[b].subscribe(function(a){sko.log("*** OBSERVING NODE ABOT ID:"+
-b+" new value -> "+a);null!=a?sko.store.node(sko.plainUri(a),function(d,c){if(d)if(0<c.toArray().length){var e=c.toArray()[0].subject.toNT();sko.log(" ------------\> "+b+" : "+e+" 5");sko.aboutResourceMap[b].about(e)}else sko.log("*** NO RESOURCE FOR URI:"+a),sko.log(" ------------\> "+b+" : "+a+" 6"),sko.aboutResourceMap[b].about(a);else sko.log("Error updating 3 resource for URI:"+a+" in SKO about node observer"),sko.log("*** NO RESOURCE FOR URI:"+a+" NEXT ID:"+b),sko.log(" ------------\> "+b+" : "+
-a+" 7"),sko.aboutResourceMap[b].about(a)}):(sko.log("*** NO RESOURCE FOR URI:"+a),sko.log(" ------------\> "+b+" : NEW BLANK  8"),sko.aboutResourceMap[b].about(sko.nextBlankLabel()))});sko.aboutResourceSubscriptionMap[b]=e}d(b)})}};
-sko.rel=function(a,c,d,b){var e=""+sko.aboutCounter,f=null;sko.aboutCounter++;if("string"===typeof a){var h=sko.NTUri(a),f=h;sko.about[e]=ko.dependentObservable({read:function(){sko.log("*** OBSERVABLE READING RELATED  DEPENDING NODE ABOT ID:"+e);var a=sko.currentResource(jQuery(c).parent().toArray()[0]);sko.log(a);if(null!=a){sko.log(" ** about:"+a.about());sko.log("*** Found parent resource: "+a.about());if(a[h]){var b=a[h]();if(null!=b&&!sko.isSKOBlankNode(a[h]()))return b=sko.NTUri(b),null==sko.aboutResourceMap[e]||
-sko.aboutResourceMap[e].about()!=b?(sko.log("*** found related resource: "+b),sko.store.node(sko.plainUri(b),function(a,d){sko.log("CREATED NODE FOR ID "+e+" AND URI: "+sko.plainUri(b));sko.log(d);sko.log(" ------------\> "+e+" : "+b+" 8b");sko.aboutResourceMap[e]=new sko.Resource(e,b,d)})):sko.log("*** Related resource hasn't changed"),b;if(null==b){sko.log("*** related resource is null");sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");var d=sko.nextBlankLabel();sko.log(" ** setting parent node related resource to "+
-d);a[h](d)}else sko.aboutResourceMap[e]?(sko.log("*** setting new value for related resource "+d),sko.log(" ------------\> "+e+" : "+d+" 9"),sko.aboutResourceMap[e].about(d)):sko.log("!! Should I create the new blank node?");return d}sko.log("!!! parent resource doest not link to the related resource")}else sko.log("!!! impossible to find parent resource")},write:function(a){null==a&&(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),a=sko.nextBlankLabel());a=sko.NTUri(a);sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+
-e+" URI -> "+a);var b=sko.currentResource(jQuery(c).parent().toArray()[0]);null!=b?(sko.log("*** Found parent resource: "+b.about()),b[f]?(sko.log("*** Setting new related resource in parent resource found: "+a),b[f](a)):sko.log("!!! parent resource doest not link to the related resource")):sko.log("!!! impossible to find parent resource")},owner:d});d=sko.about[e].subscribe(function(a){sko.log("*** OBSERVING RELATED NODE ABOT ID:"+e+" new value -> "+a);null==a&&(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),
-a=sko.nextBlankLabel());a=sko.NTUri(a);null!=sko.about[e]()?sko.plainUri(a)!==sko.plainUri(sko.about[e]())&&sko.store.node(sko.plainUri(a),function(b,d){b?(d.toArray(),sko.log(" ------------\> "+e+" : "+h+" 10"),sko.aboutResourceMap[e].about(h)):sko.log("Error updating 1 resource for URI:"+a+" in SKO about related node observer")}):sko.log("!! this resource is now null, should be removed from list of resources?")})}else sko.about[e]=ko.dependentObservable({read:function(){var b;null!=a?(b=a(),b=sko.NTUri(b),
-sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+e+" URI -> "+b)):(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),b=sko.nextBlankLabel());var d=sko.currentResource(jQuery(c).parent().toArray()[0]);if(null!=d){sko.log("*** Found parent resource: "+d.about());if(d[b]){var f=d[b]();sko.log("*** found related resource: "+f);sko.store.node(sko.plainUri(f),function(a,b){sko.log(" ------------\> "+e+" : "+f+" 11");sko.aboutResourceMap[e]=new sko.Resource(e,f,b)});return f}sko.log("!!! parent resource doest not link to the related resource")}else sko.log("!!! impossible to find parent resource")},
-write:function(b){var b=sko.NTUri(b),d=sko.currentResource(jQuery(c).parent().toArray()[0]);sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+e+" URI -> "+b);null==b&&(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),b=sko.nextBlankLabel());null!=d?(sko.log("*** Found parent resource: "+d.about()),d[a()]?(sko.log("*** Setting new related resource in parent resource found: "+b),d[a()](b),a(b)):sko.log("!!! parent resource doest not link to the related resource")):sko.log("!!! impossible to find parent resource")},
-owner:d}),d=sko.about[e].subscribe(function(a){a=sko.NTUri(a);sko.log("*** OBSERVING RELATED NODE (F) ABOT ID:"+e+" new value -> "+a);null==a&&(sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL"),a=sko.nextBlankLabel());sko.plainUri(a)!=sko.plainUri(sko.about[e]())?sko.store.node(sko.plainUri(a),function(b,d){if(b){var c=d.toArray()[0].subject.valueOf();sko.log(" ------------\> "+e+" : "+c+" 12");sko.aboutResourceMap[e].about(c)}else sko.log("Error updating  2 resource for URI:"+a+" in SKO about related node observer")}):
-sko.log("*** Related about resource hasn't changed")});sko.aboutResourceSubscriptionMap[e]=d;b(e)};sko.plainUri=function(a){if("<"===a[0]&&">"==a[a.length-1])return a.slice(1,a.length-1);if(null!=a.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/)){var a=a.slice(1,a.length-1),c=sko.rdf.prefixes.resolve(a);if(null==c)throw"The CURIE "+a+" cannot be resolved";return c}return a};
-sko.effectiveValue=function(a){if(null==a)return null;if(a.interfaceName&&"Literal"===a.interfaceName){if("http://www.w3.org/2001/XMLSchema#integer"==a.datatype||"http://www.w3.org/2001/XMLSchema#decimal"==a.datatype||"http://www.w3.org/2001/XMLSchema#double"==a.datatype||"http://www.w3.org/2001/XMLSchema#nonPositiveInteger"==a.datatype||"http://www.w3.org/2001/XMLSchema#negativeInteger"==a.datatype||"http://www.w3.org/2001/XMLSchema#long"==a.datatype||"http://www.w3.org/2001/XMLSchema#int"==a.datatype||
-"http://www.w3.org/2001/XMLSchema#short"==a.datatype||"http://www.w3.org/2001/XMLSchema#byte"==a.datatype||"http://www.w3.org/2001/XMLSchema#nonNegativeInteger"==a.datatype||"http://www.w3.org/2001/XMLSchema#unsignedLong"==a.datatype||"http://www.w3.org/2001/XMLSchema#unsignedInt"==a.datatype||"http://www.w3.org/2001/XMLSchema#unsignedShort"==a.datatype||"http://www.w3.org/2001/XMLSchema#unsignedByte"==a.datatype||"http://www.w3.org/2001/XMLSchema#positiveInteger"==a.datatype)return parseFloat(a.valueOf());
-if("http://www.w3.org/2001/XMLSchema#boolean"===a.type)return"true"===a.valueOf()||!0===a.valueOf()||"True"===a.valueOf();if("http://www.w3.org/2001/XMLSchema#string"===a.type)return a.valueOf();if("http://www.w3.org/2001/XMLSchema#dateTime"===a.type)return new Date(a.valueOf());if(null==a.type)return a.valueOf()}else return a.valueOf()};sko.defaultLanguage=ko.observable(null);
-sko.Resource=function(a,c,d){this.resourceId=a;this.valuesMap={};this.subscriptions=[];this.literalLangs={};this.classes={};var b=this;this.defaultLanguage=ko.dependentObservable(function(){return sko.defaultLanguage()});c=sko.NTUri(c);d.forEach(function(a){sko.log(a);"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"===a.predicate.toNT()&&(sko.log(" found resource class "+a.object.toNT()),b.classes[a.object.toNT()]=!0);if("NamedNode"===a.object.interfaceName)b.valuesMap[a.predicate.toNT()]=a.object.toNT(),
-b[a.predicate.toNT()]=ko.observable(a.object.toNT());else if("Literal"===a.object.interfaceName)if(null!=b.defaultLanguage()){if(null==b.valuesMap[a.predicate.toNT()]||a.object.language==b.defaultLanguage()){var d=sko.effectiveValue(a.object.valueOf());b.valuesMap[a.predicate.toNT()]=d;b[a.predicate.toNT()]=ko.observable(d);b[sko.plainUri(a.predicate.toNT())]=b[a.predicate.toNT()];b.literalLangs[a.predicate.toNT()]=a.object.language}}else{if(null==b.valuesMap[a.predicate.toNT()]||null==a.object.language)d=
-sko.effectiveValue(a.object.valueOf()),b.valuesMap[a.predicate.toNT()]=d,b[a.predicate.toNT()]=ko.observable(d),b[sko.plainUri(a.predicate.toNT())]=b[a.predicate.toNT()],b.literalLangs[a.predicate.toNT()]=a.object.language}else b.valuesMap[a.predicate.toNT()]=a.object.valueOf(),b[a.predicate.toNT()]=ko.observable(a.object.valueOf()),b[sko.plainUri(a.predicate.toNT())]=b[a.predicate.toNT()]});this.about=ko.observable(c);this["@"]=this.about;this.storeObserverFn=sko.Resource.storeObserver(this);sko.Class.check(this,
-!0);b=this;this.subscriptions.push(this.about.subscribe(function(a){sko.log("SKO Resource new resource:"+a);sko.log("*** STOP OBSERVING NODE STORE");sko.store.stopObservingNode(b.storeObserverFn);if(null!=a&&0!=a.indexOf("_:sko"))sko.log("*** START OBSERVING NODE STORE FOR "+b.about()),sko.store.startObservingNode(sko.plainUri(a),b.storeObserverFn);else{sko.log("*** nullifying resources");for(var d in b.valuesMap)b.valuesMap[d]=null;for(d in b.valuesMap)b[d](null)}}));sko.Resource.koObserver(this);
-sko.store.startObservingNode(sko.plainUri(this.about()),b.storeObserverFn)};sko.NTUri=function(a){if("["===a[0]&&"]"===a[a.length-1]){a=a.slice(1,a.length-1);resolved=sko.rdf.prefixes.resolve(a);if(null==a)throw"The CURIE "+a+" cannot be resolved";a="<"+resolved+">"}return a};sko.Resource.prototype.tryProperty=function(a){a=sko.NTUri(a);if(null==this[a]){this.valuesMap[a]=null;this[a]=ko.observable(null);var c=this;this.subscriptions.push(this[a].subscribe(function(d){c.notifyPropertyChange(a,d)}))}return this[a]};
-sko.Resource.prototype.prop=function(a){return this.tryProperty(a)};sko.Resource.prototype.getProp=function(a){return this.tryProperty(a)()};sko.Resource.prototype.setProp=function(a,c){return this.tryProperty(a)(c)};
-sko.Resource.prototype.notifyPropertyChange=function(a,c){sko.log("*** received KO notification for property "+a+" -> "+c);if(null==this.valuesMap[a])this.valuesMap[a]=c,0===this.about().indexOf("_:sko")||null!=c&&(0===c.indexOf("http")?sko.store.execute("INSERT DATA { "+this.about()+" "+a+" <"+c+"> }",function(){}):0===c.indexOf("<")?sko.store.execute("INSERT DATA { "+this.about()+" "+a+" "+c+" }",function(){}):sko.store.execute("INSERT DATA { "+this.about()+" "+a+' "'+c+'" }',function(){}));else if(this.valuesMap[a]!==
-c&&!sko.isSKOBlankNode(c)){var d='"'+this.valuesMap[a]+'"',c='"'+c+'"';null!=this.literalLangs[a]&&(d=d+"@"+this.literalLangs[a],c=c+"@"+this.literalLangs[a]);var b="DELETE { "+this.about()+" "+a+" "+d+" }",b=b+" INSERT { "+this.about()+" "+a+" "+c+" }",b=b+" WHERE { "+this.about()+" "+a+" "+d+" }",b=b.replace(/"</g,"<").replace(/>"/g,">");this.valuesMap[a]=c;sko.log("*** updating STORE: \n  "+b);sko.store.execute(b)}};sko.isSKOBlankNode=function(a){return 0===a.indexOf("_:sko")};
-sko.Resource.prototype.disconnect=function(){sko.log(" ** DISCONNECTING");sko.store.stopObservingNode(this.storeObserverFn);sko.log(" ** disconnected STORE");for(var a=0;a<this.subscriptions.length;a++)sko.log(" ** disconnecting subscription"),this.subscriptions[a].dispose();sko.log(" ** disconnecting resource map");sko.aboutResourceSubscriptionMap[this.resourceId].dispose();sko.log(" ** deleting");delete sko.aboutResourceMap[this.resourceId];delete sko.about[this.resourceId]};
-sko.cleanNode=function(a){sko.log("*** CLEANING!");sko.log(a);var c=jQuery(a).attr("aboutId"),d=[];null!=c&&d.push(c);d=d.concat(sko.childrenResourceIds(a));for(a=0;a<d.length;a++)null!=sko.aboutResourceMap[d[a]]&&(sko.log("*** DISCONNECTING "+d[a]),sko.log(sko.aboutResourceMap[d[a]]),sko.aboutResourceMap[d[a]].disconnect())};
-sko.Resource.koObserver=function(a){var c=function(a,d){sko.log("*** subcribing to property "+d);var c=a[d].subscribe(function(c){a.notifyPropertyChange(d,c)});a.subscriptions.push(c)},d;for(d in a.valuesMap)c(a,d)};
-sko.Resource.storeObserver=function(a){return function(c){sko.log("*** received notification change from STORE in resource "+a.about());if(0!==a.about().indexOf("_:sko")){var d={},b={};sko.log("*** triples in STORE resource -> "+c.toArray().length);c.forEach(function(c){if("NamedNode"===c.object.interfaceName)sko.log(" "+c.predicate.toNT()+" -> "+c.object.toNT()),null!=d[c.predicate.toNT()]?d[c.predicate.toNT()].constructor===Array?(d[c.predicate.toNT()].push(c.object.toNT()),d[c.predicate.toNT()].sort()):
-d[c.predicate.toNT()]=[d[c.predicate.toNT()],c.object.toNT()]:d[c.predicate.toNT()]=c.object.toNT();else if(null!=a.defaultLanguage()){if(null==d[c.predicate.toNT()]||c.object.language==a.defaultLanguage())null!=d[c.predicate.toNT()]?d[c.predicate.toNT()].constructor===Array?(d[c.predicate.toNT()].push(c.object.valueOf()),d[c.predicate.toNT()].sort()):b[c.predicate.toNT()]!=c.object.language?(d[c.predicate.toNT()]=c.object.valueOf(),b[c.predicate.toNT()]=c.object.language):d[c.predicate.toNT()]=[d[c.predicate.toNT()],
-c.object.valueOf()]:(sko.log(" "+c.predicate.toNT()+" -> "+c.object.valueOf()),d[c.predicate.toNT()]=c.object.valueOf(),b[c.predicate.toNT()]=c.object.language)}else if(null==d[c.predicate.toNT()]||null==c.object.language)null!=d[c.predicate.toNT()]?d[c.predicate.toNT()].constructor===Array?(d[c.predicate.toNT()].push(c.object.valueOf()),d[c.predicate.toNT()].sort()):null!=b[c.predicate.toNT()]?(d[c.predicate.toNT()]=c.object.valueOf(),b[c.predicate.toNT()]=c.object.language):d[c.predicate.toNT()]=
-[d[c.predicate.toNT()],c.object.valueOf()]:(sko.log(" "+c.predicate.toNT()+" -> "+c.object.valueOf()),d[c.predicate.toNT()]=c.object.valueOf(),b[c.predicate.toNT()]=c.object.language)});var e={},c=[],f=[],h=[],i;for(i in a.valuesMap)if(null!=d[i])if(e[i]=d[i],a.valuesMap[i]&&a.valuesMap[i].constructor===Array&&newValue[i].constructor===Array)a.valuesMap[i].length!=newValue[i].length&&f.push(i);else{if(a.valuesMap[i]!==d[i]&&(f.push(i),null!=b[i]||null!=a.literalLangs[i]))a.literalLangs[i]=b[i]}else c.push(i),
-delete a.literalLangs[i];for(i in d)null==a.valuesMap[i]&&(h.push(i),e[i]=d[i],a.literalLangs[i]=b[i]);a.valuesMap=e;for(i=0;i<c.length;i++)sko.log("*** setting value to null "+c[i]+" -> NULL"),a[c[i]](null);for(i=0;i<f.length;i++)sko.log("*** updating value "+f[i]+" -> "+a.valuesMap[f[i]]),a[f[i]](a.valuesMap[f[i]]);for(i=0;i<h.length;i++){sko.log("*** new value "+h[i]+" -> "+a.valuesMap[h[i]]);if(null!=a[h[i]])a[h[i]](a.valuesMap[h[i]]);else a[h[i]]=ko.observable(a.valuesMap[h[i]]);a[sko.plainUri(h[i])]=
-a[h[i]]}sko.Class.check(a);sko.log("*** END MODIFICATION")}}};
-sko.traceResources=function(a,c,d){sko.log("** TRACING:");sko.log(a);var b=[];(jQuery(a).attr("about")||jQuery(a).attr("data-bind"))&&b.push(a);var a=jQuery(a).find("*[about], *[data-bind]").toArray(),b=b.concat(a),e=function(a,d){var i=b[d._i],g=jQuery(i).attr("about");if(null==jQuery(i).attr("aboutId")){if(null==g){var j=jQuery(i).attr("data-bind");null!=j&&-1!=j.indexOf("about:")&&(g=/s*([^ ]+)s*,?/.exec(j.split("about:")[1])[0],","===g[g.length-1]&&(g=g.slice(0,g.length-1)))}null!=g&&""!=g?("string"===
-typeof g&&"<"!==g[0]&&">"!==g[g.length-1]&&"["!==g[0]&&"]"!==g[g.length-1]&&(g=c[g]),sko.about(g,c,function(b){jQuery(i).attr("aboutId",b);a(e,d)})):a(e,d)}else a(e,d)};Utils.repeat(0,b.length,e,function(){d()})};
-sko.currentResource=function(a){sko.log("in current resource");sko.log(a);if(null==a)return sko.log("!!! top of DOM tree, About node not found"),null;var c=jQuery(a).attr("aboutId");sko.log("about id:"+c);if(c){a=sko.about[c]();sko.log("uri:"+a);if(null!=a)return sko.aboutResourceMap[c];sko.log("!!! current resource is null: "+c)}else return sko.log("recurring"),sko.currentResource(jQuery(a).parent().toArray()[0])};
-sko.currentResourceNode=function(a){sko.log("in current resource node");sko.log(a);if(null==a)return sko.log("!!! top of DOM tree, About node not found"),null;var c=jQuery(a).attr("aboutId");sko.log("about id:"+c);if(c){var d=sko.about[c]();sko.log("uri:"+d);if(null!=d)return a;sko.log("!!! current resource is null: "+c);return null}sko.log("recurring");return sko.currentResourceNode(jQuery(a).parent().toArray()[0])};sko.childrenResourceIds=function(a){return jQuery(a).find("*[aboutId]").map(function(){return jQuery(this).attr("aboutId")})};
-sko.traceRelations=function(a,c,d){sko.log("*** TRACING RELATIONS:");a=sko.currentResourceNode(a)||a;sko.log("*** FOUND ROOT NODE TO LOOK FOR RELATIONS:");sko.log(a);var b=[];(jQuery(a).attr("rel")||jQuery(a).attr("data-bind"))&&b.push(a);a=jQuery(a).find("*[rel], *[data-bind]").toArray();b=b.concat(a);sko.log(" ** NODES TO LOOK FOR RELATED RESOURCES");sko.log(b);var e=function(a,d){var i=b[d._i],g=jQuery(i).attr("rel");if(null==g){var j=jQuery(i).attr("data-bind");null!=j&&-1!=j.indexOf("rel:")&&
-(g=/s*([^ ]+)s*,?/.exec(j.split("rel:")[1])[0],","===g[g.length-1]&&(g=g.slice(0,g.length-1)))}null!=g&&""!=g?("string"===typeof g&&"<"!==g[0]&&">"!==g[g.length-1]&&"["!==g[0]&&"]"!==g[g.length-1]&&(g=c[g]),null==jQuery(i).attr("aboutId")?(sko.log("*** CREATING RELATED NODE"),sko.rel(g,i,c,function(b){jQuery(i).attr("aboutId",b);a(e,d)})):(sko.log("*** NODE IS ALREADY TRACED"),a(e,d))):a(e,d)};Utils.repeat(0,b.length,e,function(){d()})};sko.generatorId=0;sko.generatorsMap={};
-sko.where=function(a){var a="select ?subject where "+a,c=""+sko.generatorId;sko.generatorId++;sko.generatorsMap[c]=ko.observable([]);sko.log("*** WHERE QUERY: "+a);sko.store.startObservingQuery(a,function(a){var b=[];sko.log(" ** RESULTS!!!");for(var e=0;e<a.length;e++)sko.log(" ** ADDING VALUE "+a[e].subject.value),b.push("<"+a[e].subject.value+">");sko.log("** SETTING VALUE");sko.log(b);sko.generatorsMap[c](b)});return sko.generatorsMap[c]};
-sko.applyBindings=function(a,c,d){"string"===typeof a&&(a=jQuery(a)[0]);sko.traceResources(a,c,function(){sko.traceRelations(a,c,function(){ko.applyBindings(c,a);null!=d&&d()})})};sko.resource=function(a){a=jQuery(a).toArray();if(1===a.length)return sko.currentResource(a[0]);for(var c=[],d=0;d<a.length;d++)c.push(sko.currentResource(a[d]));return c};sko.owl={};
+var ko = window["ko"] = {};
+// Google Closure Compiler helpers (used only to make the minified file smaller)
+ko.exportSymbol = function(publicPath, object) {
+	var tokens = publicPath.split(".");
+	var target = window;
+	for (var i = 0; i < tokens.length - 1; i++)
+		target = target[tokens[i]];
+	target[tokens[tokens.length - 1]] = object;
+};
+ko.exportProperty = function(owner, publicName, object) {
+  owner[publicName] = object;
+};
+ko.utils = new (function () {
+    var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
+    var isIe7 = /MSIE 7/i.test(navigator.userAgent);
+    
+    // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
+    var knownEvents = {}, knownEventTypesByEventName = {};
+    var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
+    knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
+    knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
+    for (var eventType in knownEvents) {
+        var knownEventsForType = knownEvents[eventType];
+        if (knownEventsForType.length) {
+            for (var i = 0, j = knownEventsForType.length; i < j; i++)
+                knownEventTypesByEventName[knownEventsForType[i]] = eventType;
+        }
+    }
+
+    function isClickOnCheckableElement(element, eventType) {
+        if ((element.tagName != "INPUT") || !element.type) return false;
+        if (eventType.toLowerCase() != "click") return false;
+        var inputType = element.type.toLowerCase();
+        return (inputType == "checkbox") || (inputType == "radio");
+    }
+    
+    return {
+        fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+        
+        arrayForEach: function (array, action) {
+            for (var i = 0, j = array.length; i < j; i++)
+                action(array[i]);
+        },
+
+        arrayIndexOf: function (array, item) {
+            if (typeof array.indexOf == "function")
+                return array.indexOf(item);
+            for (var i = 0, j = array.length; i < j; i++)
+                if (array[i] === item)
+                    return i;
+            return -1;
+        },
+
+        arrayFirst: function (array, predicate, predicateOwner) {
+            for (var i = 0, j = array.length; i < j; i++)
+                if (predicate.call(predicateOwner, array[i]))
+                    return array[i];
+            return null;
+        },
+
+        arrayRemoveItem: function (array, itemToRemove) {
+            var index = ko.utils.arrayIndexOf(array, itemToRemove);
+            if (index >= 0)
+                array.splice(index, 1);
+        },
+
+        arrayGetDistinctValues: function (array) {
+            array = array || [];
+            var result = [];
+            for (var i = 0, j = array.length; i < j; i++) {
+                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
+                    result.push(array[i]);
+            }
+            return result;
+        },
+
+        arrayMap: function (array, mapping) {
+            array = array || [];
+            var result = [];
+            for (var i = 0, j = array.length; i < j; i++)
+                result.push(mapping(array[i]));
+            return result;
+        },
+
+        arrayFilter: function (array, predicate) {
+            array = array || [];
+            var result = [];
+            for (var i = 0, j = array.length; i < j; i++)
+                if (predicate(array[i]))
+                    result.push(array[i]);
+            return result;
+        },
+        
+        arrayPushAll: function (array, valuesToPush) {
+            for (var i = 0, j = valuesToPush.length; i < j; i++)
+                array.push(valuesToPush[i]);	
+        },
+
+        emptyDomNode: function (domNode) {
+            while (domNode.firstChild) {
+                ko.removeNode(domNode.firstChild);
+            }
+        },
+
+        setDomNodeChildren: function (domNode, childNodes) {
+            ko.utils.emptyDomNode(domNode);
+            if (childNodes) {
+                ko.utils.arrayForEach(childNodes, function (childNode) {
+                    domNode.appendChild(childNode);
+                });
+            }
+        },
+
+        replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesArray) {
+            var nodesToReplaceArray = nodeToReplaceOrNodeArray.nodeType ? [nodeToReplaceOrNodeArray] : nodeToReplaceOrNodeArray;
+            if (nodesToReplaceArray.length > 0) {
+                var insertionPoint = nodesToReplaceArray[0];
+                var parent = insertionPoint.parentNode;
+                for (var i = 0, j = newNodesArray.length; i < j; i++)
+                    parent.insertBefore(newNodesArray[i], insertionPoint);
+                for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
+                    ko.removeNode(nodesToReplaceArray[i]);
+                }
+            }
+        },
+
+        setOptionNodeSelectionState: function (optionNode, isSelected) {
+            // IE6 sometimes throws "unknown error" if you try to write to .selected directly, whereas Firefox struggles with setAttribute. Pick one based on browser.
+            if (navigator.userAgent.indexOf("MSIE 6") >= 0)
+                optionNode.setAttribute("selected", isSelected);
+            else
+                optionNode.selected = isSelected;
+        },
+
+        getElementsHavingAttribute: function (rootNode, attributeName) {
+            if ((!rootNode) || (rootNode.nodeType != 1)) return [];
+            var results = [];
+            if (rootNode.getAttribute(attributeName) !== null)
+                results.push(rootNode);
+            var descendants = rootNode.getElementsByTagName("*");
+            for (var i = 0, j = descendants.length; i < j; i++)
+                if (descendants[i].getAttribute(attributeName) !== null)
+                    results.push(descendants[i]);
+            return results;
+        },
+
+        stringTrim: function (string) {
+            return (string || "").replace(stringTrimRegex, "");
+        },
+
+        stringTokenize: function (string, delimiter) {
+            var result = [];
+            var tokens = (string || "").split(delimiter);
+            for (var i = 0, j = tokens.length; i < j; i++) {
+                var trimmed = ko.utils.stringTrim(tokens[i]);
+                if (trimmed !== "")
+                    result.push(trimmed);
+            }
+            return result;
+        },
+        
+        stringStartsWith: function (string, startsWith) {        	
+            string = string || "";
+            if (startsWith.length > string.length)
+                return false;
+            return string.substring(0, startsWith.length) === startsWith;
+        },
+
+        evalWithinScope: function (expression, scope, node) {
+            // Always do the evaling within a "new Function" to block access to parent scope
+            if (scope === undefined)
+                return (new Function("return " + expression))();
+
+            scope['skonode'] = node;
+                
+            // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
+            // the variable name "expression" itself will clash with a subproperty called "expression"
+            // The model must available in the chain scope for arbritrary JS code to execute, but it 
+            // also must be reference by <> and [] URIs anc CURIES
+            return (new Function("__SKO__sc", "with(__SKO__sc){ var innerNode=skonode; return (" + expression + ") }"))(scope);
+        },
+
+        domNodeIsContainedBy: function (node, containedByNode) {
+            if (containedByNode.compareDocumentPosition)
+                return (containedByNode.compareDocumentPosition(node) & 16) == 16;
+            while (node != null) {
+                if (node == containedByNode)
+                    return true;
+                node = node.parentNode;
+            }
+            return false;
+        },
+
+        domNodeIsAttachedToDocument: function (node) {
+            return ko.utils.domNodeIsContainedBy(node, document);
+        },
+
+        registerEventHandler: function (element, eventType, handler) {
+            if (typeof jQuery != "undefined") {
+                if (isClickOnCheckableElement(element, eventType)) {
+                    // For click events on checkboxes, jQuery interferes with the event handling in an awkward way:
+                    // it toggles the element checked state *after* the click event handlers run, whereas native
+                    // click events toggle the checked state *before* the event handler. 
+                    // Fix this by intecepting the handler and applying the correct checkedness before it runs.            	
+                    var originalHandler = handler;
+                    handler = function(event, eventData) {
+                        var jQuerySuppliedCheckedState = this.checked;
+                        if (eventData)
+                            this.checked = eventData.checkedStateBeforeEvent !== true;
+                        originalHandler.call(this, event);
+                        this.checked = jQuerySuppliedCheckedState; // Restore the state jQuery applied
+                    };                	
+                }
+                jQuery(element)['bind'](eventType, handler);
+            } else if (typeof element.addEventListener == "function")
+                element.addEventListener(eventType, handler, false);
+            else if (typeof element.attachEvent != "undefined")
+                element.attachEvent("on" + eventType, function (event) {
+                    handler.call(element, event);
+                });
+            else
+                throw new Error("Browser doesn't support addEventListener or attachEvent");
+        },
+
+        triggerEvent: function (element, eventType) {
+            if (!(element && element.nodeType))
+                throw new Error("element must be a DOM node when calling triggerEvent");
+
+            if (typeof jQuery != "undefined") {
+                var eventData = [];
+                if (isClickOnCheckableElement(element, eventType)) {
+                    // Work around the jQuery "click events on checkboxes" issue described above by storing the original checked state before triggering the handler
+                    eventData.push({ checkedStateBeforeEvent: element.checked });
+                }
+                jQuery(element)['trigger'](eventType, eventData);
+            } else if (typeof document.createEvent == "function") {
+                if (typeof element.dispatchEvent == "function") {
+                    var eventCategory = knownEventTypesByEventName[eventType] || "HTMLEvents";
+                    var event = document.createEvent(eventCategory);
+                    event.initEvent(eventType, true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, element);
+                    element.dispatchEvent(event);
+                }
+                else
+                    throw new Error("The supplied element doesn't support dispatchEvent");
+            } else if (typeof element.fireEvent != "undefined") {
+                // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
+                // so to make it consistent, we'll do it manually here
+                if (eventType == "click") {
+                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
+                        element.checked = element.checked !== true;
+                }
+                element.fireEvent("on" + eventType);
+            }
+            else
+                throw new Error("Browser doesn't support triggering events");
+        },
+
+        unwrapObservable: function (value) {
+            return ko.isObservable(value) ? value() : value;
+        },
+
+        domNodeHasCssClass: function (node, className) {
+            var currentClassNames = (node.className || "").split(/\s+/);
+            return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
+        },
+
+        toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
+            var hasClass = ko.utils.domNodeHasCssClass(node, className);
+            if (shouldHaveClass && !hasClass) {
+                node.className = (node.className || "") + " " + className;
+            } else if (hasClass && !shouldHaveClass) {
+                var currentClassNames = (node.className || "").split(/\s+/);
+                var newClassName = "";
+                for (var i = 0; i < currentClassNames.length; i++)
+                    if (currentClassNames[i] != className)
+                        newClassName += currentClassNames[i] + " ";
+                node.className = ko.utils.stringTrim(newClassName);
+            }
+        },
+
+        range: function (min, max) {
+            min = ko.utils.unwrapObservable(min);
+            max = ko.utils.unwrapObservable(max);
+            var result = [];
+            for (var i = min; i <= max; i++)
+                result.push(i);
+            return result;
+        },
+        
+        makeArray: function(arrayLikeObject) {
+            var result = [];
+            for (var i = 0, j = arrayLikeObject.length; i < j; i++) {
+                result.push(arrayLikeObject[i]);
+            };
+            return result;
+        },
+        
+        isIe6 : isIe6,
+        isIe7 : isIe7,
+        
+        getFormFields: function(form, fieldName) {
+            var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+            var isMatchingField = (typeof fieldName == 'string') 
+                ? function(field) { return field.name === fieldName }
+                : function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
+            var matches = [];
+            for (var i = fields.length - 1; i >= 0; i--) {
+                if (isMatchingField(fields[i]))
+                    matches.push(fields[i]);
+            };
+            return matches;
+        },
+        
+        parseJson: function (jsonString) {
+            if (typeof jsonString == "string") {
+                jsonString = ko.utils.stringTrim(jsonString);
+                if (jsonString) {
+                    if (window.JSON && window.JSON.parse) // Use native parsing where available
+                        return window.JSON.parse(jsonString);
+                    return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
+                }
+            }	
+            return null;
+        },
+
+        stringifyJson: function (data) {
+            if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
+                throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
+            return JSON.stringify(ko.utils.unwrapObservable(data));
+        },
+
+        postJson: function (urlOrForm, data, options) {
+            options = options || {};
+            var params = options['params'] || {};
+            var includeFields = options['includeFields'] || this.fieldsIncludedWithJsonPost;
+            var url = urlOrForm;
+            
+            // If we were given a form, use its 'action' URL and pick out any requested field values 	
+            if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+                var originalForm = urlOrForm;
+                url = originalForm.action;
+                for (var i = includeFields.length - 1; i >= 0; i--) {
+                    var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
+                    for (var j = fields.length - 1; j >= 0; j--)        				
+                        params[fields[j].name] = fields[j].value;
+                }
+            }        	
+            
+            data = ko.utils.unwrapObservable(data);
+            var form = document.createElement("FORM");
+            form.style.display = "none";
+            form.action = url;
+            form.method = "post";
+            for (var key in data) {
+                var input = document.createElement("INPUT");
+                input.name = key;
+                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
+                form.appendChild(input);
+            }
+            for (var key in params) {
+                var input = document.createElement("INPUT");
+                input.name = key;
+                input.value = params[key];
+                form.appendChild(input);
+            }            
+            document.body.appendChild(form);
+            options['submitter'] ? options['submitter'](form) : form.submit();
+            setTimeout(function () { form.parentNode.removeChild(form); }, 0);
+        }
+    }
+})();
+
+ko.exportSymbol('ko.utils', ko.utils);
+ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
+ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
+ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
+ko.exportSymbol('ko.utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
+ko.exportSymbol('ko.utils.arrayIndexOf', ko.utils.arrayIndexOf);
+ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
+ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
+ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
+ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
+ko.exportSymbol('ko.utils.getElementsHavingAttribute', ko.utils.getElementsHavingAttribute);
+ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
+ko.exportSymbol('ko.utils.registerEventHandler', ko.utils.registerEventHandler);
+ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
+ko.exportSymbol('ko.utils.range', ko.utils.range);
+ko.exportSymbol('ko.utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
+ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
+ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+
+if (!Function.prototype['bind']) {
+    // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)
+    // In case the browser doesn't implement it natively, provide a JavaScript implementation. This implementation is based on the one in prototype.js
+    Function.prototype['bind'] = function (object) {
+        var originalFunction = this, args = Array.prototype.slice.call(arguments), object = args.shift();
+        return function () {
+            return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));
+        }; 
+    };
+}
+
+ko.utils.domData = new (function () {
+    var uniqueId = 0;
+    var dataStoreKeyExpandoPropertyName = "__ko__" + (new Date).getTime();
+    var dataStore = {};
+    return {
+        get: function (node, key) {
+            var allDataForNode = ko.utils.domData.getAll(node, false);
+            return allDataForNode === undefined ? undefined : allDataForNode[key];
+        },
+        set: function (node, key, value) {
+            if (value === undefined) {
+                // Make sure we don't actually create a new domData key if we are actually deleting a value
+                if (ko.utils.domData.getAll(node, false) === undefined)
+                    return;
+            }
+            var allDataForNode = ko.utils.domData.getAll(node, true);
+            allDataForNode[key] = value;
+        },
+        getAll: function (node, createIfNotFound) {
+            var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
+            if (!dataStoreKey) {
+                if (!createIfNotFound)
+                    return undefined;
+                dataStoreKey = node[dataStoreKeyExpandoPropertyName] = "ko" + uniqueId++;
+                dataStore[dataStoreKey] = {};
+            }
+            return dataStore[dataStoreKey];
+        },
+        clear: function (node) {
+            var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
+            if (dataStoreKey) {
+                delete dataStore[dataStoreKey];
+                node[dataStoreKeyExpandoPropertyName] = null;
+            }
+        }
+    }
+})();
+ko.utils.domNodeDisposal = new (function () {
+    var domDataKey = "__ko_domNodeDisposal__" + (new Date).getTime();
+    
+    function getDisposeCallbacksCollection(node, createIfNotFound) {
+        var allDisposeCallbacks = ko.utils.domData.get(node, domDataKey);
+        if ((allDisposeCallbacks === undefined) && createIfNotFound) {
+            allDisposeCallbacks = [];
+            ko.utils.domData.set(node, domDataKey, allDisposeCallbacks);
+        }
+        return allDisposeCallbacks;
+    }
+    function destroyCallbacksCollection(node) {
+        ko.utils.domData.set(node, domDataKey, undefined);
+    }
+    
+    function cleanSingleNode(node) {
+        // @modified
+        // clean RDF observers
+        sko.cleanNode(node)
+
+        // Run all the dispose callbacks
+        var callbacks = getDisposeCallbacksCollection(node, false);
+        if (callbacks) {
+            callbacks = callbacks.slice(0); // Clone, as the array may be modified during iteration (typically, callbacks will remove themselves)
+            for (var i = 0; i < callbacks.length; i++)
+                callbacks[i](node);
+        }	
+        
+        // Also erase the DOM data
+        ko.utils.domData.clear(node);		
+        
+        // Special support for jQuery here because it's so commonly used.
+        // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
+        // so notify it to tear down any resources associated with the node & descendants here.
+        if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
+            jQuery['cleanData']([node]);			
+    }
+    
+    return {
+        addDisposeCallback : function(node, callback) {
+            if (typeof callback != "function")
+                throw new Error("Callback must be a function");
+            getDisposeCallbacksCollection(node, true).push(callback);
+        },
+        
+        removeDisposeCallback : function(node, callback) {
+            var callbacksCollection = getDisposeCallbacksCollection(node, false);
+            if (callbacksCollection) {
+                ko.utils.arrayRemoveItem(callbacksCollection, callback);
+                if (callbacksCollection.length == 0)
+                    destroyCallbacksCollection(node);
+            }
+        },
+        
+        cleanNode : function(node) {
+            if ((node.nodeType != 1) && (node.nodeType != 9))
+                return;
+            cleanSingleNode(node);
+            
+            // Clone the descendants list in case it changes during iteration
+            var descendants = [];
+            ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
+            for (var i = 0, j = descendants.length; i < j; i++)
+                cleanSingleNode(descendants[i]);
+        },
+        
+        removeNode : function(node) {
+            ko.cleanNode(node);
+            if (node.parentNode)
+                node.parentNode.removeChild(node);
+        }
+    }
+})();
+ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
+ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience
+ko.exportSymbol('ko.cleanNode', ko.cleanNode); 
+ko.exportSymbol('ko.removeNode', ko.removeNode);
+ko.exportSymbol('ko.utils.domNodeDisposal', ko.utils.domNodeDisposal);
+ko.exportSymbol('ko.utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
+ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);
+(function () {
+    function simpleHtmlParse(html) {
+        // Based on jQuery's "clean" function, but only accounting for table-related elements.
+        // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
+        
+        // Trim whitespace, otherwise indexOf won't work as expected
+        var tags = ko.utils.stringTrim(html).toLowerCase(), div = document.createElement("div");
+
+        // Finds the first match from the left column, and returns the corresponding "wrap" data from the right column
+        var wrap = tags.match(/^<(thead|tbody|tfoot)/)              && [1, "<table>", "</table>"] ||
+                   !tags.indexOf("<tr")                             && [2, "<table><tbody>", "</tbody></table>"] ||
+                   (!tags.indexOf("<td") || !tags.indexOf("<th"))   && [3, "<table><tbody><tr>", "</tr></tbody></table>"] ||
+                   /* anything else */                                 [0, "", ""];
+
+        // Go to html and back, then peel off extra wrappers
+        div.innerHTML = wrap[1] + html + wrap[2];
+
+        // Move to the right depth
+        while (wrap[0]--)
+            div = div.lastChild;
+
+        return ko.utils.makeArray(div.childNodes);
+    }
+    
+    ko.utils.parseHtmlFragment = function(html) {
+        return typeof jQuery != 'undefined' ? jQuery['clean']([html]) // As below, benefit from jQuery's optimisations where possible
+                                            : simpleHtmlParse(html);  // ... otherwise, this simple logic will do in most common cases.
+    };
+    
+    ko.utils.setHtml = function(node, html) {
+        ko.utils.emptyDomNode(node);
+        
+        if ((html !== null) && (html !== undefined)) {
+            if (typeof html != 'string')
+                html = html.toString();
+            
+            // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
+            // for example <tr> elements which are not normally allowed to exist on their own.
+            // If you've referenced jQuery we'll use that rather than duplicating its code.
+            if (typeof jQuery != 'undefined') {
+		try {
+                    jQuery(node)['html'](html);		    
+		} catch (x) {
+		    jQuery(node)['html'](html.replace("<","&lt;").replace(">","&gt;"));
+		}
+            } else {
+                // ... otherwise, use KO's own parsing logic.
+                var parsedNodes = ko.utils.parseHtmlFragment(html);
+                for (var i = 0; i < parsedNodes.length; i++)
+                    node.appendChild(parsedNodes[i]);
+            }            
+        }    	
+    };
+})();
+ko.memoization = (function () {
+    var memos = {};
+
+    function randomMax8HexChars() {
+        return (((1 + Math.random()) * 0x100000000) | 0).toString(16).substring(1);
+    }
+    function generateRandomId() {
+        return randomMax8HexChars() + randomMax8HexChars();
+    }
+    function findMemoNodes(rootNode, appendToArray) {
+        if (!rootNode)
+            return;
+        if (rootNode.nodeType == 8) {
+            var memoId = ko.memoization.parseMemoText(rootNode.nodeValue);
+            if (memoId != null)
+                appendToArray.push({ domNode: rootNode, memoId: memoId });
+        } else if (rootNode.nodeType == 1) {
+            for (var i = 0, childNodes = rootNode.childNodes, j = childNodes.length; i < j; i++)
+                findMemoNodes(childNodes[i], appendToArray);
+        }
+    }
+
+    return {
+        memoize: function (callback) {
+            if (typeof callback != "function")
+                throw new Error("You can only pass a function to ko.memoization.memoize()");
+            var memoId = generateRandomId();
+            memos[memoId] = callback;
+            return "<!--[ko_memo:" + memoId + "]-->";
+        },
+
+        unmemoize: function (memoId, callbackParams) {
+            var callback = memos[memoId];
+            if (callback === undefined)
+                throw new Error("Couldn't find any memo with ID " + memoId + ". Perhaps it's already been unmemoized.");
+            try {
+                callback.apply(null, callbackParams || []);
+                return true;
+            }
+            finally { delete memos[memoId]; }
+        },
+
+        unmemoizeDomNodeAndDescendants: function (domNode, extraCallbackParamsArray) {
+            var memos = [];
+            findMemoNodes(domNode, memos);
+            for (var i = 0, j = memos.length; i < j; i++) {
+                var node = memos[i].domNode;
+                var combinedParams = [node];
+
+                if (extraCallbackParamsArray)
+                    ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
+
+                var viewModel = extraCallbackParamsArray[0];
+                sko.traceResources(domNode, viewModel, function(){
+                    sko.traceRelations(domNode, viewModel, function(){
+                        try{
+			    if(memos[i]) {
+				ko.memoization.unmemoize(memos[i].memoId, combinedParams);				
+                                node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
+			    }
+
+                            if (node.parentNode)
+				node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)
+                        }catch(e) {}
+                    });
+                });
+            }
+        },
+
+        parseMemoText: function (memoText) {
+            var match = memoText.match(/^\[ko_memo\:(.*?)\]$/);
+            return match ? match[1] : null;
+        }
+    };
+})();
+
+ko.exportSymbol('ko.memoization', ko.memoization);
+ko.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
+ko.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
+ko.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
+ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);
+
+ko.subscription = function (callback, disposeCallback) {
+    this.callback = callback;
+    this.dispose = function () {
+        this.isDisposed = true;
+        disposeCallback();
+    }['bind'](this);
+    
+    ko.exportProperty(this, 'dispose', this.dispose);
+};
+
+ko.subscribable = function () {
+    var _subscriptions = [];
+
+    this.subscribe = function (callback, callbackTarget) {
+        var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
+
+        var subscription = new ko.subscription(boundCallback, function () {
+            ko.utils.arrayRemoveItem(_subscriptions, subscription);
+        });
+        _subscriptions.push(subscription);
+        return subscription;
+    };
+
+    this.notifySubscribers = function (valueToNotify) {
+        ko.utils.arrayForEach(_subscriptions.slice(0), function (subscription) {
+            // In case a subscription was disposed during the arrayForEach cycle, check
+            // for isDisposed on each subscription before invoking its callback
+            if (subscription && (subscription.isDisposed !== true))
+                subscription.callback(valueToNotify);
+        });
+    };
+
+    this.getSubscriptionsCount = function () {
+        return _subscriptions.length;
+    };
+    
+    ko.exportProperty(this, 'subscribe', this.subscribe);
+    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
+    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
+}
+
+ko.isSubscribable = function (instance) {
+    return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
+};
+
+ko.exportSymbol('ko.subscribable', ko.subscribable);
+ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);
+
+ko.dependencyDetection = (function () {
+    var _detectedDependencies = [];
+
+    return {
+        begin: function () {
+            _detectedDependencies.push([]);
+        },
+
+        end: function () {
+            return _detectedDependencies.pop();
+        },
+
+        registerDependency: function (subscribable) {
+            if (!ko.isSubscribable(subscribable))
+                throw "Only subscribable things can act as dependencies";
+            if (_detectedDependencies.length > 0) {
+                _detectedDependencies[_detectedDependencies.length - 1].push(subscribable);
+            }
+        }
+    };
+})();var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
+
+function valuesArePrimitiveAndEqual(a, b) {
+    var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+    return oldValueIsPrimitive ? (a === b) : false;
+}
+
+ko.observable = function (initialValue) {
+    var _latestValue = initialValue;
+
+    function observable() {
+        if (arguments.length > 0) {
+            // Write            
+            
+            // Ignore writes if the value hasn't changed
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+                _latestValue = arguments[0];
+                observable.notifySubscribers(_latestValue);        		
+            }
+            return this; // Permits chained assignments
+        }
+        else {
+            // Read
+            ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
+            return _latestValue;
+        }
+    }
+    observable.__ko_proto__ = ko.observable;
+    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
+    observable['equalityComparer'] = valuesArePrimitiveAndEqual;
+    
+    ko.subscribable.call(observable);
+    
+    ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
+    
+    return observable;
+}
+ko.isObservable = function (instance) {
+    if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
+    if (instance.__ko_proto__ === ko.observable) return true;
+    return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
+}
+ko.isWriteableObservable = function (instance) {
+    // Observable
+    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+        return true;
+    // Writeable dependent observable
+    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+        return true;
+    // Anything else
+    return false;
+}
+
+
+ko.exportSymbol('ko.observable', ko.observable);
+ko.exportSymbol('ko.isObservable', ko.isObservable);
+ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+ko.observableArray = function (initialValues) {
+    if (arguments.length == 0) {
+        // Zero-parameter constructor initializes to empty array
+        initialValues = [];
+    }
+    if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
+        throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
+    var result = new ko.observable(initialValues);
+
+    ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
+        result[methodName] = function () {
+            var underlyingArray = result();
+            var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
+            result.valueHasMutated();
+            return methodCallResult;
+        };
+    });
+
+    ko.utils.arrayForEach(["slice"], function (methodName) {
+        result[methodName] = function () {
+            var underlyingArray = result();
+            return underlyingArray[methodName].apply(underlyingArray, arguments);
+        };
+    });
+
+    result.remove = function (valueOrPredicate) {
+        var underlyingArray = result();
+        var remainingValues = [];
+        var removedValues = [];
+        var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+        for (var i = 0, j = underlyingArray.length; i < j; i++) {
+            var value = underlyingArray[i];
+            if (!predicate(value))
+                remainingValues.push(value);
+            else
+                removedValues.push(value);
+        }
+        result(remainingValues);
+        return removedValues;
+    };
+
+    result.removeAll = function (arrayOfValues) {
+        // If you passed zero args, we remove everything
+        if (arrayOfValues === undefined) {
+            var allValues = result();
+            result([]);
+            return allValues;
+        }
+        
+        // If you passed an arg, we interpret it as an array of entries to remove
+        if (!arrayOfValues)
+            return [];
+        return result.remove(function (value) {
+            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
+        });
+    };
+    
+    result.destroy = function (valueOrPredicate) {
+        var underlyingArray = result();
+        var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+        for (var i = underlyingArray.length - 1; i >= 0; i--) {
+            var value = underlyingArray[i];
+            if (predicate(value))
+                underlyingArray[i]["_destroy"] = true;
+        }
+        result.valueHasMutated();
+    };
+    
+    result.destroyAll = function (arrayOfValues) {
+        // If you passed zero args, we destroy everything
+        if (arrayOfValues === undefined)
+            return result.destroy(function() { return true });
+                
+        // If you passed an arg, we interpret it as an array of entries to destroy
+        if (!arrayOfValues)
+            return [];
+        return result.destroy(function (value) {
+            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
+        });		    	
+    };
+
+    result.indexOf = function (item) {
+        var underlyingArray = result();
+        return ko.utils.arrayIndexOf(underlyingArray, item);
+    };
+    
+    result.replace = function(oldItem, newItem) {
+        var index = result.indexOf(oldItem);
+        if (index >= 0) {
+            result()[index] = newItem;
+            result.valueHasMutated();
+        }	
+    };
+    
+    ko.exportProperty(result, "remove", result.remove);
+    ko.exportProperty(result, "removeAll", result.removeAll);
+    ko.exportProperty(result, "destroy", result.destroy);
+    ko.exportProperty(result, "destroyAll", result.destroyAll);
+    ko.exportProperty(result, "indexOf", result.indexOf);
+    
+    return result;
+}
+
+ko.exportSymbol('ko.observableArray', ko.observableArray);
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    var _latestValue, _hasBeenEvaluated = false;
+    
+    if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
+        // Single-parameter syntax - everything is on this "options" param
+        options = evaluatorFunctionOrOptions;
+    } else {
+        // Multi-parameter syntax - construct the options according to the params passed
+        options = options || {};
+        options["read"] = evaluatorFunctionOrOptions || options["read"];
+        options["owner"] = evaluatorFunctionTarget || options["owner"];
+    }
+    // By here, "options" is always non-null
+    
+    if (typeof options["read"] != "function")
+        throw "Pass a function that returns the value of the dependentObservable";
+        
+    // Build "disposeWhenNodeIsRemoved" and "disposeWhenNodeIsRemovedCallback" option values
+    // (Note: "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
+    // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
+    var disposeWhenNodeIsRemoved = (typeof options["disposeWhenNodeIsRemoved"] == "object") ? options["disposeWhenNodeIsRemoved"] : null;
+    var disposeWhenNodeIsRemovedCallback = null;
+    if (disposeWhenNodeIsRemoved) {
+        disposeWhenNodeIsRemovedCallback = function() { dependentObservable.dispose() };
+        ko.utils.domNodeDisposal.addDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
+        var existingDisposeWhenFunction = options["disposeWhen"];
+        options["disposeWhen"] = function () {
+            return (!ko.utils.domNodeIsAttachedToDocument(disposeWhenNodeIsRemoved)) 
+                || ((typeof existingDisposeWhenFunction == "function") && existingDisposeWhenFunction());
+        }    	
+    }
+    
+    var _subscriptionsToDependencies = [];
+    function disposeAllSubscriptionsToDependencies() {
+        ko.utils.arrayForEach(_subscriptionsToDependencies, function (subscription) {
+            subscription.dispose();
+        });
+        _subscriptionsToDependencies = [];
+    }
+
+    function replaceSubscriptionsToDependencies(newDependencies) {
+        disposeAllSubscriptionsToDependencies();
+        ko.utils.arrayForEach(newDependencies, function (dependency) {
+            _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
+        });
+    };
+    
+    function evaluate() {
+        // Don't dispose on first evaluation, because the "disposeWhen" callback might
+        // e.g., dispose when the associated DOM element isn't in the doc, and it's not
+        // going to be in the doc until *after* the first evaluation
+        if ((_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
+            if (options["disposeWhen"]()) {
+                dependentObservable.dispose();
+                return;
+            }
+        }
+
+        try {
+            ko.dependencyDetection.begin();
+            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
+        } finally {
+            var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
+            replaceSubscriptionsToDependencies(distinctDependencies);
+        }
+
+        dependentObservable.notifySubscribers(_latestValue);
+        _hasBeenEvaluated = true;
+    }
+
+    function dependentObservable() {
+        if (arguments.length > 0) {
+            if (typeof options["write"] === "function") {
+                // Writing a value
+                var valueToWrite = arguments[0];
+                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+            } else {
+                throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+            }
+        } else {
+            // Reading the value
+            if (!_hasBeenEvaluated)
+                evaluate();
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
+        }
+    }
+    dependentObservable.__ko_proto__ = ko.dependentObservable;
+    dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
+    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
+    dependentObservable.dispose = function () {
+        if (disposeWhenNodeIsRemoved)
+            ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
+        disposeAllSubscriptionsToDependencies();
+    };
+    
+    ko.subscribable.call(dependentObservable);
+    if (options['deferEvaluation'] !== true)
+        evaluate();
+    
+    ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
+    ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
+    
+    return dependentObservable;
+};
+ko.dependentObservable.__ko_proto__ = ko.observable;
+
+ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
+
+(function() {    
+    var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
+    
+    ko.toJS = function(rootObject) {
+        if (arguments.length == 0)
+            throw new Error("When calling ko.toJS, pass the object you want to convert.");
+        
+        // We just unwrap everything at every level in the object graph
+        return mapJsObjectGraph(rootObject, function(valueToMap) {
+            // Loop because an observable's value might in turn be another observable wrapper
+            for (var i = 0; ko.isObservable(valueToMap) && (i < maxNestedObservableDepth); i++)
+                valueToMap = valueToMap();
+            return valueToMap;
+        });
+    };
+
+    ko.toJSON = function(rootObject) {
+        var plainJavaScriptObject = ko.toJS(rootObject);
+        return ko.utils.stringifyJson(plainJavaScriptObject);
+    };
+    
+    function mapJsObjectGraph(rootObject, mapInputCallback, visitedObjects) {
+        visitedObjects = visitedObjects || new objectLookup();
+        
+        rootObject = mapInputCallback(rootObject);
+        var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
+        if (!canHaveProperties)
+            return rootObject;
+            
+        var outputProperties = rootObject instanceof Array ? [] : {};
+        visitedObjects.save(rootObject, outputProperties);            
+        
+        visitPropertiesOrArrayEntries(rootObject, function(indexer) {
+            var propertyValue = mapInputCallback(rootObject[indexer]);
+            
+            switch (typeof propertyValue) {
+                case "boolean":
+                case "number":
+                case "string":
+                case "function":
+                    outputProperties[indexer] = propertyValue;
+                    break;
+                case "object":
+                case "undefined":				
+                    var previouslyMappedValue = visitedObjects.get(propertyValue);
+                    outputProperties[indexer] = (previouslyMappedValue !== undefined)
+                        ? previouslyMappedValue
+                        : mapJsObjectGraph(propertyValue, mapInputCallback, visitedObjects);
+                    break;							
+            }
+        });
+        
+        return outputProperties;
+    }
+    
+    function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
+        if (rootObject instanceof Array) {
+            for (var i = 0; i < rootObject.length; i++)
+                visitorCallback(i);
+        } else {
+            for (var propertyName in rootObject)
+                visitorCallback(propertyName);
+        }
+    };    
+    
+    function objectLookup() {
+        var keys = [];
+        var values = [];
+        this.save = function(key, value) {
+            var existingIndex = ko.utils.arrayIndexOf(keys, key);
+            if (existingIndex >= 0)
+                values[existingIndex] = value;
+            else {
+                keys.push(key);
+                values.push(value);	
+            }				
+        };
+        this.get = function(key) {
+            var existingIndex = ko.utils.arrayIndexOf(keys, key);
+            return (existingIndex >= 0) ? values[existingIndex] : undefined;
+        };
+    };
+})();
+
+ko.exportSymbol('ko.toJS', ko.toJS);
+ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
+    // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
+    // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
+    // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
+    ko.selectExtensions = {
+        readValue : function(element) {
+            if (element.tagName == 'OPTION') {
+                if (element['__ko__hasDomDataOptionValue__'] === true)
+                    return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+                return element.getAttribute("value");
+            } else if (element.tagName == 'SELECT')
+                return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+            else
+                return element.value;
+        },
+        
+        writeValue: function(element, value) {
+            if (element.tagName == 'OPTION') {
+                switch(typeof value) {
+                    case "string":
+                    case "number":
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
+                        if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                            delete element['__ko__hasDomDataOptionValue__'];
+                        }
+                        element.value = value;                                   
+                        break;
+                    default:
+                        // Store arbitrary object using DomData
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
+                        element['__ko__hasDomDataOptionValue__'] = true;
+                        element.value = "";
+                        break;
+                }			
+            } else if (element.tagName == 'SELECT') {
+                for (var i = element.options.length - 1; i >= 0; i--) {
+                    if (ko.selectExtensions.readValue(element.options[i]) == value) {
+                        element.selectedIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                if ((value === null) || (value === undefined))
+                    value = "";
+                element.value = value;
+            }
+        }
+    };        
+})();
+
+ko.exportSymbol('ko.selectExtensions', ko.selectExtensions);
+ko.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
+ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);
+
+ko.jsonExpressionRewriting = (function () {
+    var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
+    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
+    var javaScriptReservedWords = ["true", "false"];
+
+    function restoreTokens(string, tokens) {
+        return string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
+            return tokens[tokenIndex];
+        });
+    }
+
+    function isWriteableValue(expression) {
+        if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
+            return false;
+        if(expression[0]=="<" && expression[expression.length-1]==">")
+            return true;
+        return expression.match(javaScriptAssignmentTarget) !== null;
+    }
+
+    return {
+        parseJson: function (jsonString) {
+            jsonString = ko.utils.stringTrim(jsonString);
+            if (jsonString.length < 3)
+                return {};
+
+            //@modified
+            // added counter of nested curly braces
+
+            // We're going to split on commas, so first extract any blocks that may contain commas other than those at the top level
+            var tokens = [];
+            var tokenStart = null, tokenEndChar, tokenCounter;
+            for (var position = jsonString.charAt(0) == "{" ? 1 : 0; position < jsonString.length; position++) {
+                var c = jsonString.charAt(position);
+                if (tokenStart === null) {
+                    switch (c) {
+                        case '"':
+                        case "'":
+                        case "/":
+                            tokenStart = position;
+                            tokenEndChar = c;
+                            break;
+                        case "<":
+                            tokenStart = position;
+                            tokenEndChar = ">";
+                            break;
+                        case "{":
+                            tokenStart = position;
+                            tokenCounter = 1;
+                            tokenEndChar = "}";
+                            break;
+                        case "[":
+                            tokenStart = position;
+                            tokenEndChar = "]";
+                            break;
+                    }
+                } else if(tokenEndChar == "}" && c == "{") {
+                    tokenCounter++;
+                } else if(tokenEndChar == "}" && c == "}" && tokenCounter>1) {
+                    tokenCounter--;
+                } else if (c == tokenEndChar) {
+                    var token = jsonString.substring(tokenStart, position + 1);
+                    tokens.push(token);
+                    var replacement = "[ko_token_" + (tokens.length - 1) + "]";
+                    jsonString = jsonString.substring(0, tokenStart) + replacement + jsonString.substring(position + 1);
+                    position -= (token.length - replacement.length);
+                    tokenStart = null;
+                }
+            }
+
+            // Now we can safely split on commas to get the key/value pairs
+            var result = {};
+            var keyValuePairs = jsonString.split(",");
+            for (var i = 0, j = keyValuePairs.length; i < j; i++) {
+                var pair = keyValuePairs[i];
+                var colonPos = pair.indexOf(":");
+                if ((colonPos > 0) && (colonPos < pair.length - 1)) {
+                    var key = ko.utils.stringTrim(pair.substring(0, colonPos));
+                    var value = ko.utils.stringTrim(pair.substring(colonPos + 1));
+                    if (key.charAt(0) == "{")
+                        key = key.substring(1);
+                    if (value.charAt(value.length - 1) == "}")
+                        value = value.substring(0, value.length - 1);
+                    key = ko.utils.stringTrim(restoreTokens(key, tokens));
+                    value = ko.utils.stringTrim(restoreTokens(value, tokens));
+                    result[key] = value;
+                }
+            }
+            return result;
+        },
+
+        insertPropertyAccessorsIntoJson: function (jsonString) {
+            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
+            var propertyAccessorTokens = [];
+            for (var key in parsed) {
+                var value = parsed[key];
+                if (isWriteableValue(value)) {
+                    if (propertyAccessorTokens.length > 0)
+                        propertyAccessorTokens.push(", ");
+                    propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+                }
+            }
+
+            if (propertyAccessorTokens.length > 0) {
+                var allPropertyAccessors = propertyAccessorTokens.join("");
+                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            }
+
+            return jsonString;
+        },
+
+	//@modified
+	parseURIsInJSONString: function(jsonString) {
+	    var re = /["']?(<|\[)[a-z:\/.#?&%]+(\]|>)['"]?/g;
+	    var acum = "";
+	    var found = re.exec(jsonString);
+	    while(found != null) {
+		if((found[0][0] === "'" || found[0][0] === '"') &&
+		   (found[0][found[0].length-1] === "'" || found[0][found[0].length-1] === '"')) {
+		    var parts = jsonString.split(found[0]);
+		    acum = acum + parts[0] + found[0];
+		    jsonString = parts[1];
+		} else {
+		    var w = found[0];
+		    var index = found.index;
+		    var pref = jsonString.substring(0,index);
+		    acum = pref+"sko.current().tryProperty('"+w+"')";
+		    jsonString= jsonString.substring(index+w.length);
+		}
+		found = re.exec(jsonString);
+	    }
+
+	    return acum+jsonString;
+	},
+
+        insertPropertyReaderWritersIntoJson: function (jsonString) {
+            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
+            var propertyAccessorTokens = [];
+            var readers = "";
+            var isFirst = true;
+            for (var key in parsed) {
+                var value = parsed[key];
+
+		value = this.parseURIsInJSONString(value);
+                if (isWriteableValue(value)) {
+                    if (propertyAccessorTokens.length > 0)
+                        propertyAccessorTokens.push(", ");
+                    if(value[0]==="<" && value[value.length-1]===">" && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                    } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && key !== 'about' && key !== 'rel') {
+                        propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; sko.current().tryProperty('" + value + "') = __ko_value; }");
+                    } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
+                        // nothing here
+                    } else if(value[0]==="[" && value[value.length-1]==="]" && (key === 'about' || key === 'rel')) {
+                        // nothing here
+                    } else {
+                        if(/tryProperty\([^)]+\)$/.test(value) || /prop\([^)]+\)$/.test(value)) {
+                            propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; " + value + "(__ko_value); }");
+                        } else {
+                            propertyAccessorTokens.push(key + " : function(__ko_value) { sko.current = function() { return sko.currentResource(innerNode); }; " + value + " = __ko_value; }");
+                        }
+                    }
+                }
+                if(!isFirst)  {
+                    readers = readers+", ";
+                } else {
+                    isFirst = false;
+                }
+                if(value[0]==='<' && value[value.length-1]==='>' && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+value+"') })()";
+                } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && key !== 'about' && key !== 'rel') {
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return sko.current().tryProperty('"+value+"') })()";
+                } else if(value[0]==="<" && value[value.length-1]===">" && (key === 'about' || key === 'rel')) {
+                    readers = readers+key+": '"+value.slice(1,value.length-1)+"'";
+                } else if(value.match(/^\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]$/) != null && (key === 'about' || key === 'rel')) {
+                    readers = readers+key+": sko.rdf.prefixes.resolve('"+value.slice(1,value.length-1)+"')";
+                } else {
+                    readers = readers+key+": (function(){ sko.current = function() { return sko.currentResource(innerNode); }; return "+value+" })()";
+                }
+            }
+
+            jsonString = readers;
+
+            if (propertyAccessorTokens.length > 0) {
+                var allPropertyAccessors = propertyAccessorTokens.join("");
+                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            }
+
+            return jsonString;
+        }
+
+    };
+})();
+
+ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
+ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson', ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson);
+
+(function () {
+    var defaultBindingAttributeName = "data-bind";
+    ko.bindingHandlers = {};
+
+    function parseBindingAttribute(attributeText, viewModel, node) {
+        try {
+            var json = " { " + ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(attributeText) + " } ";
+            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, node);
+        } catch (ex) {
+	    if(typeof(console) !== 'undefined') {
+		console.log("!!! ERROR");
+		console.log(attributeText);
+		console.log(ex);
+	    }
+	    //@modified
+            //throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
+        }
+    };
+
+    function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
+        handler(element, dataValue, allBindings, viewModel);
+    }
+
+    ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
+        var isFirstEvaluation = true;
+        bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
+
+        // Each time the dependentObservable is evaluated (after data changes),
+        // the binding attribute is reparsed so that it can pick out the correct
+        // model properties in the context of the changed data.
+        // DOM event callbacks need to be able to access this changed data,
+        // so we need a single parsedBindings variable (shared by all callbacks
+        // associated with this node's bindings) that all the closures can access.
+        var parsedBindings;
+        function makeValueAccessor(bindingKey) {
+            return function () { return parsedBindings[bindingKey] }
+        }
+        function parsedBindingsAccessor() {
+            return parsedBindings;
+        }
+        
+        new ko.dependentObservable(
+            function () {
+
+
+                var evaluatedBindings, bindingsToBeEvaluated;
+                if(typeof(bindings) == 'function') {
+                    viewModel['skonode'] = node;
+                    bindingsToBeEvaluated = bindings;
+                    with(viewModel){ evaluatedBindings =  bindingsToBeEvaluated() };
+                } else {
+                    evaluatedBindings = bindings;
+                }
+
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, node);
+
+
+                // First run all the inits, so bindings can register for notification on changes
+                if (isFirstEvaluation) {
+                    for (var bindingKey in parsedBindings) {
+                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
+                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
+                    }                	
+                }
+                
+                // ... then run all the updates, which might trigger changes even on the first evaluation
+                for (var bindingKey in parsedBindings) {
+                    if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
+                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                }
+            },
+            null,
+            { 'disposeWhenNodeIsRemoved' : node }
+        );
+        isFirstEvaluation = false;
+    };
+
+    ko.applyBindings = function (viewModel, rootNode) {
+        if (rootNode && (rootNode.nodeType == undefined))
+            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
+                
+        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
+        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
+            ko.applyBindingsToNode(element, null, viewModel);
+        });
+    };
+    
+    ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
+})();
+// For certain common events (currently just 'click'), allow a simplified data-binding syntax
+// e.g. click:handler instead of the usual full-length event:{click:handler}
+var eventHandlersWithShortcuts = ['click'];
+ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
+    ko.bindingHandlers[eventName] = {
+        'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            var newValueAccessor = function () {
+                var result = {};
+                result[eventName] = valueAccessor();
+                return result;
+            };
+            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindingsAccessor, viewModel);
+        }
+    }	
+});
+
+
+ko.bindingHandlers['event'] = {
+    'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        var eventsToHandle = valueAccessor() || {};
+        for(var eventNameOutsideClosure in eventsToHandle) {
+            (function() {
+                var eventName = eventNameOutsideClosure; // Separate variable to be captured by event handler closure
+                if (typeof eventName == "string") {
+                    ko.utils.registerEventHandler(element, eventName, function (event) {
+                        var handlerReturnValue;
+                        var handlerFunction = valueAccessor()[eventName];
+                        if (!handlerFunction)
+                            return;
+                        var allBindings = allBindingsAccessor();
+                        
+                        try { 
+                            handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
+                        } finally {
+                            if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                                if (event.preventDefault)
+                                    event.preventDefault();
+                                else
+                                    event.returnValue = false;
+                            }
+                        }
+                        
+                        var bubble = allBindings[eventName + 'Bubble'] !== false;
+                        if (!bubble) {
+                            event.cancelBubble = true;
+                            if (event.stopPropagation)
+                                event.stopPropagation();
+                        }
+                    });
+                }
+            })();
+        }
+    }
+};
+
+ko.bindingHandlers['submit'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        if (typeof valueAccessor() != "function")
+            throw new Error("The value for a submit binding must be a function to invoke on submit");
+        ko.utils.registerEventHandler(element, "submit", function (event) {
+            var handlerReturnValue;
+            var value = valueAccessor();
+            try { handlerReturnValue = value.call(viewModel, element); }
+            finally {
+                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                    if (event.preventDefault)
+                        event.preventDefault();
+                    else
+                        event.returnValue = false;
+                }
+            }
+        });
+    }
+};
+
+ko.bindingHandlers['visible'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var isCurrentlyVisible = !(element.style.display == "none");
+        if (value && !isCurrentlyVisible)
+            element.style.display = "";
+        else if ((!value) && isCurrentlyVisible)
+            element.style.display = "none";
+    }
+}
+
+ko.bindingHandlers['enable'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if (value && element.disabled)
+            element.removeAttribute("disabled");
+        else if ((!value) && (!element.disabled))
+            element.disabled = true;
+    }
+};
+
+ko.bindingHandlers['disable'] = { 
+    'update': function (element, valueAccessor) { 
+        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) }); 		
+    } 	
+};
+
+ko.bindingHandlers['value'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor) { 
+        // Always catch "change" event; possibly other events too if asked
+        var eventsToCatch = ["change"];
+        var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        if (requestedEventsToCatch) {
+            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
+                requestedEventsToCatch = [requestedEventsToCatch];
+            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
+            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
+        }
+        
+        ko.utils.arrayForEach(eventsToCatch, function(eventName) {
+            // The syntax "after<eventname>" means "run the handler asynchronously after the event"
+            // This is useful, for example, to catch "keydown" events after the browser has updated the control
+            // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
+            var handleEventAsynchronously = false;
+            if (ko.utils.stringStartsWith(eventName, "after")) {
+                handleEventAsynchronously = true;
+                eventName = eventName.substring("after".length);
+            }
+            var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
+                                                            : function(handler) { handler() };
+            
+            ko.utils.registerEventHandler(element, eventName, function () {
+                runEventHandler(function() {
+                    var modelValue = valueAccessor();
+                    var elementValue = ko.selectExtensions.readValue(element);
+                    if (ko.isWriteableObservable(modelValue))
+                        modelValue(elementValue);
+                    else {
+                        var allBindings = allBindingsAccessor();
+                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                            allBindings['_ko_property_writers']['value'](elementValue); 
+                    }
+                });
+            });	    	
+        });
+    },
+    'update': function (element, valueAccessor) {
+        var newValue = ko.utils.unwrapObservable(valueAccessor());
+        var elementValue = ko.selectExtensions.readValue(element);
+        var valueHasChanged = (newValue != elementValue);
+        
+        // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same). 
+        // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.
+        if ((newValue === 0) && (elementValue !== 0) && (elementValue !== "0"))
+            valueHasChanged = true;
+        
+        if (valueHasChanged) {
+            var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
+            applyValueAction();
+
+            // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
+            // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
+            // to apply the value as well.
+            var alsoApplyAsynchronously = element.tagName == "SELECT";
+            if (alsoApplyAsynchronously)
+                setTimeout(applyValueAction, 0);
+        }
+        
+        // For SELECT nodes, you're not allowed to have a model value that disagrees with the UI selection, so if there is a
+        // difference, treat it as a change that should be written back to the model
+        if (element.tagName == "SELECT") {
+            elementValue = ko.selectExtensions.readValue(element);
+            if(elementValue !== newValue)
+                ko.utils.triggerEvent(element, "change");
+        }
+    }
+};
+
+ko.bindingHandlers['options'] = {
+    'update': function (element, valueAccessor, allBindingsAccessor) {
+        if (element.tagName != "SELECT")
+            throw new Error("options binding applies only to SELECT elements");
+
+        var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
+            return node.tagName && node.tagName == "OPTION" && node.selected;
+        }), function (node) {
+            return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
+        });
+        var previousScrollTop = element.scrollTop;
+
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var selectedValue = element.value;
+        ko.utils.emptyDomNode(element);
+
+        if (value) {
+            var allBindings = allBindingsAccessor();
+            if (typeof value.length != "number")
+                value = [value];
+            if (allBindings['optionsCaption']) {
+                var option = document.createElement("OPTION");
+                option.innerHTML = allBindings['optionsCaption'];
+                ko.selectExtensions.writeValue(option, undefined);
+                element.appendChild(option);
+            }
+            for (var i = 0, j = value.length; i < j; i++) {
+                var option = document.createElement("OPTION");
+                
+                // Apply a value to the option element
+                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                optionValue = ko.utils.unwrapObservable(optionValue);
+                ko.selectExtensions.writeValue(option, optionValue);
+                
+                // Apply some text to the option element
+                var optionsTextValue = allBindings['optionsText'];
+                if (typeof optionsTextValue == "function")
+                    optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
+                else if (typeof optionsTextValue == "string")
+                    optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
+                else
+                    optionText = optionValue;				 // Given no optionsText arg; use the data value itself
+                if ((optionText === null) || (optionText === undefined))
+                    optionText = "";                                    
+                optionText = ko.utils.unwrapObservable(optionText).toString();
+                typeof option.innerText == "string" ? option.innerText = optionText
+                                                    : option.textContent = optionText;
+
+                element.appendChild(option);
+            }
+
+            // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
+            // That's why we first added them without selection. Now it's time to set the selection.
+            var newOptions = element.getElementsByTagName("OPTION");
+            var countSelectionsRetained = 0;
+            for (var i = 0, j = newOptions.length; i < j; i++) {
+                if (ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[i])) >= 0) {
+                    ko.utils.setOptionNodeSelectionState(newOptions[i], true);
+                    countSelectionsRetained++;
+                }
+            }
+            
+            if (previousScrollTop)
+                element.scrollTop = previousScrollTop;
+        }
+    }
+};
+ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.bindingHandlers.options.optionValueDomData__';
+
+ko.bindingHandlers['selectedOptions'] = {
+    getSelectedValuesFromSelectNode: function (selectNode) {
+        var result = [];
+        var nodes = selectNode.childNodes;
+        for (var i = 0, j = nodes.length; i < j; i++) {
+            var node = nodes[i];
+            if ((node.tagName == "OPTION") && node.selected)
+                result.push(ko.selectExtensions.readValue(node));
+        }
+        return result;
+    },
+    'init': function (element, valueAccessor, allBindingsAccessor) {
+        ko.utils.registerEventHandler(element, "change", function () { 
+            var value = valueAccessor();
+            if (ko.isWriteableObservable(value))
+                value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+            else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                    allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+            }
+        });    	
+    },
+    'update': function (element, valueAccessor) {
+        if (element.tagName != "SELECT")
+            throw new Error("values binding applies only to SELECT elements");
+
+        var newValue = ko.utils.unwrapObservable(valueAccessor());
+        if (newValue && typeof newValue.length == "number") {
+            var nodes = element.childNodes;
+            for (var i = 0, j = nodes.length; i < j; i++) {
+                var node = nodes[i];
+                if (node.tagName == "OPTION")
+                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
+            }
+        }
+    }
+};
+
+ko.bindingHandlers['text'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if ((value === null) || (value === undefined))
+            value = "";
+        typeof element.innerText == "string" ? element.innerText = value
+                                             : element.textContent = value;
+    }
+};
+
+ko.bindingHandlers['html'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        ko.utils.setHtml(element, value);
+    }
+};
+
+ko.bindingHandlers['css'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
+        for (var className in value) {
+            if (typeof className == "string") {
+                var shouldHaveClass = ko.utils.unwrapObservable(value[className]);
+                ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
+            }
+        }
+    }
+};
+
+ko.bindingHandlers['style'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
+        for (var styleName in value) {
+            if (typeof styleName == "string") {
+                var styleValue = ko.utils.unwrapObservable(value[styleName]);
+                element.style[styleName] = styleValue || ""; // Empty string removes the value, whereas null/undefined have no effect
+            }
+        }
+    }
+};
+
+ko.bindingHandlers['uniqueName'] = {
+    'init': function (element, valueAccessor) {
+        if (valueAccessor()) {
+            element.name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
+
+            // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
+            if (ko.utils.isIe6)
+                element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
+        }
+    }
+};
+ko.bindingHandlers['uniqueName'].currentIndex = 0;
+
+ko.bindingHandlers['checked'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor) {
+        var updateHandler = function() {            
+            var valueToWrite;
+            if (element.type == "checkbox") {
+                valueToWrite = element.checked;
+            } else if ((element.type == "radio") && (element.checked)) {
+                valueToWrite = element.value;
+            } else {
+                return; // "checked" binding only responds to checkboxes and selected radio buttons
+            }
+            
+            var modelValue = valueAccessor();                 
+            if ((element.type == "checkbox") && (ko.utils.unwrapObservable(modelValue) instanceof Array)) {
+                // For checkboxes bound to an array, we add/remove the checkbox value to that array
+                // This works for both observable and non-observable arrays
+                var existingEntryIndex = ko.utils.arrayIndexOf(ko.utils.unwrapObservable(modelValue), element.value);
+                if (element.checked && (existingEntryIndex < 0))
+                    modelValue.push(element.value);
+                else if ((!element.checked) && (existingEntryIndex >= 0))
+                    modelValue.splice(existingEntryIndex, 1);
+            } else if (ko.isWriteableObservable(modelValue)) {            	
+                if (modelValue() !== valueToWrite) { // Suppress repeated events when there's nothing new to notify (some browsers raise them)
+                    modelValue(valueToWrite);
+                }
+            } else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
+                    allBindings['_ko_property_writers']['checked'](valueToWrite);
+                }
+            }
+        };
+        ko.utils.registerEventHandler(element, "click", updateHandler);
+
+        // IE 6 won't allow radio buttons to be selected unless they have a name
+        if ((element.type == "radio") && !element.name)
+            ko.bindingHandlers['uniqueName']['init'](element, function() { return true });
+    },
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        
+        if (element.type == "checkbox") {        	
+            if (value instanceof Array) {
+                // When bound to an array, the checkbox being checked represents its value being present in that array
+                element.checked = ko.utils.arrayIndexOf(value, element.value) >= 0;
+            } else {
+                // When bound to anything other value (not an array), the checkbox being checked represents the value being trueish
+                element.checked = value;	
+            }            
+            
+            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
+            if (value && ko.utils.isIe6) 
+                element.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"), false);
+        } else if (element.type == "radio") {
+            element.checked = (element.value == value);
+            
+            // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
+            if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
+                element.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"), false);
+        }
+    }
+};
+
+ko.bindingHandlers['attr'] = {
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor()) || {};
+        for (var attrName in value) {
+            if (typeof attrName == "string") {
+                var attrValue = ko.utils.unwrapObservable(value[attrName]);
+                
+                // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
+                // when someProp is a "no value"-like value (strictly null, false, or undefined)
+                // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)                
+                if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
+                    element.removeAttribute(attrName);
+                else 
+		    // @modified
+		    var actualValue = attrValue.toString();
+		    if(actualValue) {
+		        if(actualValue[0] === '<' && actualValue[actualValue.length-1] === '>') {
+		     	    actualValue = actualValue.substring(1,actualValue.length-1);
+		        }
+                        element.setAttribute(attrName, actualValue);
+		    }
+            }
+        }
+    }
+};
+ko.templateEngine = function () {
+    this['renderTemplate'] = function (templateName, data, options) {
+        throw "Override renderTemplate in your ko.templateEngine subclass";
+    },
+    this['isTemplateRewritten'] = function (templateName) {
+        throw "Override isTemplateRewritten in your ko.templateEngine subclass";
+    },
+    this['rewriteTemplate'] = function (templateName, rewriterCallback) {
+        throw "Override rewriteTemplate in your ko.templateEngine subclass";
+    },
+    this['createJavaScriptEvaluatorBlock'] = function (script) {
+        throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";
+    }
+};
+
+ko.exportSymbol('ko.templateEngine', ko.templateEngine);
+
+ko.templateRewriting = (function () {
+    var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;
+
+    return {
+        ensureTemplateIsRewritten: function (template, templateEngine) {
+            if (!templateEngine['isTemplateRewritten'](template))
+                templateEngine['rewriteTemplate'](template, function (htmlString) {
+                    return ko.templateRewriting.memoizeBindingAttributeSyntax(htmlString, templateEngine);
+                });
+        },
+
+        memoizeBindingAttributeSyntax: function (htmlString, templateEngine) {
+            return htmlString.replace(memoizeBindingAttributeSyntaxRegex, function () {
+                var tagToRetain = arguments[1];
+                var dataBindAttributeValue = arguments[6];
+
+                // @modified
+                // modified the rewritting function used
+                //dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindAttributeValue);
+                dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyReaderWritersIntoJson(dataBindAttributeValue);
+
+                // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
+                // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
+                var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
+                    return (function() { var innerNode=skonode; return { " + dataBindAttributeValue + " } })() \
+                })";
+                return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
+            });
+        },
+
+        applyMemoizedBindingsToNextSibling: function (bindings) {
+            return ko.memoization.memoize(function (domNode, viewModel) {
+                if (domNode.nextSibling) {
+                    // @modified
+                    sko.traceResources(domNode.nextSibling, viewModel, function(){
+                        sko.traceRelations(domNode.nextSibling, viewModel, function(){
+                            ko.applyBindingsToNode(domNode.nextSibling, bindings, viewModel);
+                        });
+                    });
+                }
+            });
+        }
+    }
+})();
+
+ko.exportSymbol('ko.templateRewriting', ko.templateRewriting);
+ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
+
+(function () {
+    var _templateEngine;
+    ko.setTemplateEngine = function (templateEngine) {
+        if ((templateEngine != undefined) && !(templateEngine instanceof ko.templateEngine))
+            throw "templateEngine must inherit from ko.templateEngine";
+        _templateEngine = templateEngine;
+    }
+
+    function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
+        return nodeOrNodeArray.nodeType ? nodeOrNodeArray
+                                        : nodeOrNodeArray.length > 0 ? nodeOrNodeArray[0]
+                                        : null;
+    }
+
+    function executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options) {
+        var dataForTemplate = ko.utils.unwrapObservable(data);
+
+        options = options || {};
+        var templateEngineToUse = (options['templateEngine'] || _templateEngine);
+        ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
+        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, dataForTemplate, options);
+
+        // Loosely check result is an array of DOM nodes
+        if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
+            throw "Template engine must return an array of DOM nodes";
+
+        // @modified
+        // Change the positoin of switch and if(render
+        // so the rendered node is added to the DOM before being unmemoized
+        switch (renderMode) {
+            case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "ignoreTargetNode": break;
+            default: throw new Error("Unknown renderMode: " + renderMode);
+        }
+
+        if (renderedNodesArray)
+            ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
+                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
+            });
+
+        if (options['afterRender'])
+            options['afterRender'](renderedNodesArray, data);
+
+        return renderedNodesArray;
+    }
+
+    ko.renderTemplate = function (template, data, options, targetNodeOrNodeArray, renderMode) {
+        options = options || {};
+        if ((options['templateEngine'] || _templateEngine) == undefined)
+            throw "Set a template engine before calling renderTemplate";
+        renderMode = renderMode || "replaceChildren";
+
+        if (targetNodeOrNodeArray) {
+            var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
+            
+            var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
+            var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
+            
+            return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
+                function () {
+                    // Support selecting template as a function of the data being rendered
+                    var templateName = typeof(template) == 'function' ? template(data) : template; 
+
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, data, options);
+                    if (renderMode == "replaceNode") {
+                        targetNodeOrNodeArray = renderedNodesArray;
+                        firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
+                    }
+                },
+                null,
+                { 'disposeWhen': whenToDispose, 'disposeWhenNodeIsRemoved': activelyDisposeWhenNodeIsRemoved }
+            );
+        } else {
+            // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
+            return ko.memoization.memoize(function (domNode) {
+                ko.renderTemplate(template, data, options, domNode, "replaceNode");
+            });
+        }
+    };
+
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
+        return new ko.dependentObservable(function () {
+            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
+
+            // @modified
+            if (unwrappedArray.constructor != Array) // Coerce single value into array
+                unwrappedArray = [unwrappedArray];
+
+            // @modified
+	    // wrapping automatically non objects
+	    for(var i=0; i<unwrappedArray.length; i++) {
+		if(typeof(unwrappedArray[i]) === 'number' || typeof(unwrappedArray[i]) === 'string') {
+		    var unwrapped = {$value: unwrappedArray[i]};
+		    for(var p in viewModel) {
+			unwrapped[p] = viewModel[p];
+		    }
+		    unwrappedArray[i] = unwrapped;
+		}
+	    }
+       
+
+            // Filter out any entries marked as destroyed
+            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
+                return options['includeDestroyed'] || !item['_destroy'];
+            });
+
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
+                // Support selecting template as a function of the data being rendered
+                var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
+                
+                return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
+            }, options);
+        }, null, { 'disposeWhenNodeIsRemoved': targetNode });
+    };
+
+    var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
+    function disposeOldSubscriptionAndStoreNewOne(element, newSubscription) {
+        var oldSubscription = ko.utils.domData.get(element, templateSubscriptionDomDataKey);
+        if (oldSubscription && (typeof(oldSubscription.dispose) == 'function'))
+            oldSubscription.dispose();
+        ko.utils.domData.set(element, templateSubscriptionDomDataKey, newSubscription);
+    }
+    
+    ko.bindingHandlers['template'] = {
+        'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
+            
+            var templateSubscription;
+            if (typeof bindingValue['foreach'] != "undefined") {
+                // Render once for each data point
+                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+            }
+            else {
+                // Render once for this single data point (or use the viewModel if no data was provided)
+                var templateData = bindingValue['data'];
+                templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
+            }
+            
+            // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
+            disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
+        }
+    };
+})();
+
+ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
+ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+
+(function () {
+    // Simple calculation based on Levenshtein distance.
+    function calculateEditDistanceMatrix(oldArray, newArray, maxAllowedDistance) {
+        var distances = [];
+        for (var i = 0; i <= newArray.length; i++)
+            distances[i] = [];
+
+        // Top row - transform old array into empty array via deletions
+        for (var i = 0, j = Math.min(oldArray.length, maxAllowedDistance); i <= j; i++)
+            distances[0][i] = i;
+
+        // Left row - transform empty array into new array via additions
+        for (var i = 1, j = Math.min(newArray.length, maxAllowedDistance); i <= j; i++) {
+            distances[i][0] = i;
+        }
+
+        // Fill out the body of the array
+        var oldIndex, oldIndexMax = oldArray.length, newIndex, newIndexMax = newArray.length;
+        var distanceViaAddition, distanceViaDeletion;
+        for (oldIndex = 1; oldIndex <= oldIndexMax; oldIndex++) {
+            var newIndexMinForRow = Math.max(1, oldIndex - maxAllowedDistance);
+            var newIndexMaxForRow = Math.min(newIndexMax, oldIndex + maxAllowedDistance);
+            for (newIndex = newIndexMinForRow; newIndex <= newIndexMaxForRow; newIndex++) {
+                if (oldArray[oldIndex - 1] === newArray[newIndex - 1])
+                    distances[newIndex][oldIndex] = distances[newIndex - 1][oldIndex - 1];
+                else {
+                    var northDistance = distances[newIndex - 1][oldIndex] === undefined ? Number.MAX_VALUE : distances[newIndex - 1][oldIndex] + 1;
+                    var westDistance = distances[newIndex][oldIndex - 1] === undefined ? Number.MAX_VALUE : distances[newIndex][oldIndex - 1] + 1;
+                    distances[newIndex][oldIndex] = Math.min(northDistance, westDistance);
+                }
+            }
+        }
+
+        return distances;
+    }
+
+    function findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray) {
+        var oldIndex = oldArray.length;
+        var newIndex = newArray.length;
+        var editScript = [];
+        var maxDistance = editDistanceMatrix[newIndex][oldIndex];
+        if (maxDistance === undefined)
+            return null; // maxAllowedDistance must be too small
+        while ((oldIndex > 0) || (newIndex > 0)) {
+            var me = editDistanceMatrix[newIndex][oldIndex];
+            var distanceViaAdd = (newIndex > 0) ? editDistanceMatrix[newIndex - 1][oldIndex] : maxDistance + 1;
+            var distanceViaDelete = (oldIndex > 0) ? editDistanceMatrix[newIndex][oldIndex - 1] : maxDistance + 1;
+            var distanceViaRetain = (newIndex > 0) && (oldIndex > 0) ? editDistanceMatrix[newIndex - 1][oldIndex - 1] : maxDistance + 1;
+            if ((distanceViaAdd === undefined) || (distanceViaAdd < me - 1)) distanceViaAdd = maxDistance + 1;
+            if ((distanceViaDelete === undefined) || (distanceViaDelete < me - 1)) distanceViaDelete = maxDistance + 1;
+            if (distanceViaRetain < me - 1) distanceViaRetain = maxDistance + 1;
+
+            if ((distanceViaAdd <= distanceViaDelete) && (distanceViaAdd < distanceViaRetain)) {
+                editScript.push({ status: "added", value: newArray[newIndex - 1] });
+                newIndex--;
+            } else if ((distanceViaDelete < distanceViaAdd) && (distanceViaDelete < distanceViaRetain)) {
+                editScript.push({ status: "deleted", value: oldArray[oldIndex - 1] });
+                oldIndex--;
+            } else {
+                editScript.push({ status: "retained", value: oldArray[oldIndex - 1] });
+                newIndex--;
+                oldIndex--;
+            }
+        }
+        return editScript.reverse();
+    }
+
+    ko.utils.compareArrays = function (oldArray, newArray, maxEditsToConsider) {
+        if (maxEditsToConsider === undefined) {
+            return ko.utils.compareArrays(oldArray, newArray, 1)                 // First consider likely case where there is at most one edit (very fast)
+                || ko.utils.compareArrays(oldArray, newArray, 10)                // If that fails, account for a fair number of changes while still being fast
+                || ko.utils.compareArrays(oldArray, newArray, Number.MAX_VALUE); // Ultimately give the right answer, even though it may take a long time
+        } else {
+            oldArray = oldArray || [];
+            newArray = newArray || [];
+            var editDistanceMatrix = calculateEditDistanceMatrix(oldArray, newArray, maxEditsToConsider);
+            return findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray);
+        }
+    };    
+})();
+
+ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
+
+(function () {
+    // Objective:
+    // * Given an input array, a container DOM node, and a function from array elements to arrays of DOM nodes,
+    //   map the array elements to arrays of DOM nodes, concatenate together all these arrays, and use them to populate the container DOM node
+    // * Next time we're given the same combination of things (with the array possibly having mutated), update the container DOM node
+    //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
+    //   previously mapped - retain those nodes, and just insert/delete other ones
+
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap) {
+        // Map this array value inside a dependentObservable so we re-map when any dependency changes
+        var mappedNodes = [];
+        var dependentObservable = ko.dependentObservable(function() {
+            var newMappedNodes = mapping(valueToMap) || [];
+            
+            // On subsequent evaluations, just replace the previously-inserted DOM nodes
+            if (mappedNodes.length > 0)
+                ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+            
+            // Replace the contents of the mappedNodes array, thereby updating the record
+            // of which nodes would be deleted if valueToMap was itself later removed
+            mappedNodes.splice(0, mappedNodes.length);
+            ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
+        }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
+    }
+
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
+        // Compare the provided array against the previous one
+        array = array || [];
+        options = options || {};
+        var isFirstExecution = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") === undefined;
+        var lastMappingResult = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") || [];
+        var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
+        var editScript = ko.utils.compareArrays(lastArray, array);
+
+        // Build the new mapping result
+        var newMappingResult = [];
+        var lastMappingResultIndex = 0;
+        var nodesToDelete = [];
+        var nodesAdded = [];
+        var insertAfterNode = null;
+        for (var i = 0, j = editScript.length; i < j; i++) {
+            switch (editScript[i].status) {
+                case "retained":
+                    // Just keep the information - don't touch the nodes
+                    var dataToRetain = lastMappingResult[lastMappingResultIndex];
+                    newMappingResult.push(dataToRetain);
+                    if (dataToRetain.domNodes.length > 0)
+                        insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
+                    lastMappingResultIndex++;
+                    break;
+
+                case "deleted":
+                    // Stop tracking changes to the mapping for these nodes
+                    lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
+                
+                    // Queue these nodes for later removal
+                    ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
+                        nodesToDelete.push({
+                          element: node,
+                          index: i,
+                          value: editScript[i].value
+                        });
+                        insertAfterNode = node;
+                    });
+                    lastMappingResultIndex++;
+                    break;
+
+                case "added": 
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, editScript[i].value);
+                    var mappedNodes = mapData.mappedNodes;
+                    
+                    // On the first evaluation, insert the nodes at the current insertion point
+                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
+                    for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
+                        var node = mappedNodes[nodeIndex];
+                        nodesAdded.push({
+                          element: node,
+                          index: i,
+                          value: editScript[i].value
+                        });
+                        if (insertAfterNode == null) {
+                            // Insert at beginning
+                            if (domNode.firstChild)
+                                domNode.insertBefore(node, domNode.firstChild);
+                            else
+                                domNode.appendChild(node);
+                        } else {
+                            // Insert after insertion point
+                            if (insertAfterNode.nextSibling)
+                                domNode.insertBefore(node, insertAfterNode.nextSibling);
+                            else
+                                domNode.appendChild(node);
+                        }
+                        insertAfterNode = node;
+                    }    		
+                    break;
+            }
+        }
+        
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.cleanNode(node.element) });
+
+        var invokedBeforeRemoveCallback = false;
+        if (!isFirstExecution) {
+            if (options['afterAdd']) {
+                for (var i = 0; i < nodesAdded.length; i++)
+                    options['afterAdd'](nodesAdded[i].element, nodesAdded[i].index, nodesAdded[i].value);
+            }
+            if (options['beforeRemove']) {
+                for (var i = 0; i < nodesToDelete.length; i++)
+                    options['beforeRemove'](nodesToDelete[i].element, nodesToDelete[i].index, nodesToDelete[i].value);
+                invokedBeforeRemoveCallback = true;
+            }
+        }
+        if (!invokedBeforeRemoveCallback)
+            ko.utils.arrayForEach(nodesToDelete, function (node) {
+                if (node.element.parentNode)
+                    node.element.parentNode.removeChild(node.element);
+            });
+
+        // Store a copy of the array items we just considered so we can difference it next time
+        ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);
+    }
+})();
+
+ko.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
+
+ko.jqueryTmplTemplateEngine = function () {
+    // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
+    // doesn't expose a version number, so we have to infer it.
+    this.jQueryTmplVersion = (function() {        
+        if ((typeof(jQuery) == "undefined") || !jQuery['tmpl'])
+            return 0;
+        // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
+        if (jQuery['tmpl']['tag']) {
+            if (jQuery['tmpl']['tag']['tmpl'] && jQuery['tmpl']['tag']['tmpl']['open']) {
+                if (jQuery['tmpl']['tag']['tmpl']['open'].toString().indexOf('__') >= 0) {
+                    return 3; // Since 1.0.0pre, custom tags should append markup to an array called "__"
+                }
+            }
+            return 2; // Prior to 1.0.0pre, custom tags should append markup to an array called "_"
+        }
+        return 1; // Very old version doesn't have an extensible tag system
+    })();
+
+    this['getTemplateNode'] = function (template) {
+        var templateNode = document.getElementById(template);
+        if (templateNode == null)
+            throw new Error("Cannot find template with ID=" + template);
+        return templateNode;
+    }
+
+    // These two only needed for jquery-tmpl v1
+    var aposMarker = "__ko_apos__";
+    var aposRegex = new RegExp(aposMarker, "g");
+    
+    this['renderTemplate'] = function (templateId, data, options) {
+        options = options || {};
+        if (this.jQueryTmplVersion == 0)
+            throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
+        
+        if (this.jQueryTmplVersion == 1) {    	
+            // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
+            // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
+            // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
+            // parse that text into a document fragment using jQuery.clean().        
+            var templateTextInWrapper = "<script type=\"text/html\">" + this['getTemplateNode'](templateId).text + "</script>";
+            var renderedMarkupInWrapper = jQuery['tmpl'](templateTextInWrapper, data);
+            var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");;
+            return jQuery['clean']([renderedMarkup], document);
+        }
+        
+        // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
+        if (!(templateId in jQuery['template'])) {
+            // Precache a precompiled version of this template (don't want to reparse on every render)
+            var templateText = this['getTemplateNode'](templateId).text;
+            jQuery['template'](templateId, templateText);
+        }        
+        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
+        
+        var resultNodes = jQuery['tmpl'](templateId, data, options['templateOptions']);
+        resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
+        jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
+        return resultNodes; 
+    },
+
+    this['isTemplateRewritten'] = function (templateId) {
+        // It must already be rewritten if we've already got a cached version of it
+        // (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
+        if (templateId in jQuery['template'])
+            return true;
+        
+        return this['getTemplateNode'](templateId).isRewritten === true;
+    },
+
+    this['rewriteTemplate'] = function (template, rewriterCallback) {
+        var templateNode = this['getTemplateNode'](template);
+        var rewritten = rewriterCallback(templateNode.text);     
+        
+        if (this.jQueryTmplVersion == 1) {
+            // jquery.tmpl v1 falls over if you use single-quotes, so replace these with a temporary marker for template rendering, 
+            // and then replace back after the template was rendered. This is slightly complicated by the fact that we must not interfere
+            // with any code blocks - only replace apos characters outside code blocks.
+            rewritten = ko.utils.stringTrim(rewritten);
+            rewritten = rewritten.replace(/([\s\S]*?)(\${[\s\S]*?}|{{[\=a-z][\s\S]*?}}|$)/g, function(match) {
+                // Called for each non-code-block followed by a code block (or end of template)
+                var nonCodeSnippet = arguments[1];
+                var codeSnippet = arguments[2];
+                return nonCodeSnippet.replace(/\'/g, aposMarker) + codeSnippet;
+            });         	
+        }
+        
+        templateNode.text = rewritten;
+        templateNode.isRewritten = true;
+    },
+
+    this['createJavaScriptEvaluatorBlock'] = function (script) {
+        var splitTemplate = function(dataBindCode)  {
+            var regexp1 = /<\$[^>]*>/g;
+
+            if(dataBindCode.split(regexp1).length > 1) {
+		var acum = ""
+		var rem = null;
+
+		dataBindCode.replace(regexp1,function( all, slash, type, fnargs, target, parens, args ){ 
+		    if(rem === null) {
+			rem = type;
+		    }
+	     
+		    var parts = rem.split(all);
+		    
+	     
+		    acum = acum +  parts[0] +  all.replace(/</,"<'+").replace(/>/,"+'>");
+		    parts.shift();
+		    if(parts.length === 1) {
+			    acum = acum + parts[0];
+		    } else {
+			rem = parts.join(all);
+		    }
+		});
+
+		return acum;
+	    } else {
+                return dataBindCode;
+            }
+        };
+
+        var transformedTemplate =  splitTemplate(script);
+
+        // nothing to escape -> regular execution
+        if (this.jQueryTmplVersion == 1)
+            return "{{= " + transformedTemplate + "}}"
+            
+        // From v2, jquery-tmpl does some parameter parsing that fails on nontrivial expressions.
+        // Prevent it from messing with the code by wrapping it in a further function.
+        return "{{ko_code ((function() { return " + transformedTemplate + " })()) }}"
+    },
+
+    this.addTemplate = function (templateName, templateMarkup) {
+        document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
+    }
+    ko.exportProperty(this, 'addTemplate', this.addTemplate);
+    
+    if (this.jQueryTmplVersion > 1) {
+        jQuery['tmpl']['tag']['ko_code'] = {
+            open: (this.jQueryTmplVersion < 3 ? "_" : "__") + ".push($1 || '');"
+        };
+    }    
+};
+
+ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
+
+// Use this one by default
+ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
+
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
+Utils = {};
+Utils.stackCounterLimit = 1000;
+Utils.stackCounter = 0;
+
+Utils.recur = function(c){
+    if(Utils.stackCounter === Utils.stackCounterLimit) {
+        Utils.stackCounter = 0;
+        setTimeout(c, 0);
+    } else {
+        Utils.stackCounter++;
+        c();
+    } 
+};
+
+Utils.repeat = function(c,max,floop,fend,env) {
+    if(arguments.length===4) { env = {}; }
+    if(c<max) {
+        env._i = c;
+        floop(function(floop,env){
+            // avoid stack overflow
+            // deadly hack
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env); });
+        },env);
+    } else {
+        fend(env);
+    }
+};
+
+SemanticKnockOut = {};
+window['sko'] = SemanticKnockOut;
+sko.activeDebug = false;
+
+sko.log = function(msg) {
+    if(sko.activeDebug) {
+        if(typeof(console) != 'undefined' && console.log)
+            console.log(msg);
+    }
+};
+
+// Added a version identifier
+sko.VERSION = "0.1.0";
+
+/**
+ * JSON-LD utilities
+ */
+sko.jsonld = {
+        coerce: function(obj, property, type) {
+            if(obj['@context'] == null) {
+                obj['@context'] = {};
+            }
+            if(obj['@context']['@coerce'] == null) {
+                obj['@context']['@coerce'] = {};
+                obj['@context']['@coerce'][type] = property;
+            } else if(typeof(obj['@context']['@coerce'][type]) === 'string' &&
+                      obj['@context']['@coerce'][type] != property) {
+                var oldValue = obj['@context']['@coerce'][type];
+                obj['@context']['@coerce'][type] = [oldValue, property];
+            } else if(typeof(obj['@context']['@coerce'][type]) === 'object') {
+                for(var i=0; i<obj['@context']['@coerce'][type].length; i++) {
+                    if(obj['@context']['@coerce'][type][i] === property)  {
+                        return obj;
+                    }
+                }
+
+                obj['@context']['@coerce'][type].push(property);
+            } else {
+                obj['@context']['@coerce'][type] = property;
+            }
+
+            return obj;
+        },
+
+        graphToJSONLD: function(graph, rdf) {
+            var nodes = {};
+            
+            graph.forEach(function(triple) {
+                var subject = triple.subject.valueOf();
+                var node = nodes[subject];
+                if(node == null) {
+                    node = {"@subject" : subject, "@context": {}};
+                    nodes[subject] = node;
+                }
+
+                var predicate = triple.predicate.valueOf();
+                if(predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+                    predicate = "@type";
+                }
+
+                var property  = null;
+                var isCURIE = false;
+                property = rdf.prefixes.shrink(predicate);
+
+                if(property != predicate) {
+                    isCURIE = true;
+                }
+                if(property.indexOf("#") != -1) {
+                    property = property.split("#")[1];
+                } else {
+                    property = property.split("/");
+                    property = property[property.length-1];
+                }
+
+                var object = triple.object.valueOf();
+
+                if(node[property] != null) {
+                    if(!isCURIE) {
+                        if(node["@context"][property] != null || property[0] === '@') {
+                            if(typeof(node[property]) === "object") {
+                                node[property].push(object);
+                            } else {
+                                var object = [ node[property], object];
+                                node[property] = object;
+                            }
+                        } else {
+                            property = triple.predicate.valueOf();
+                            if(node[property] == null) {
+                                node[property] = object;
+                            } else {
+                                if(typeof(node[property]) === "object") {
+                                    node[property].push(object);
+                                } else {
+                                    var object = [ node[property], object ];
+                                    node[property] = object;
+                                }
+                            }
+
+                            if(typeof(object) === 'string' &&
+                               (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
+                                sko.jsonld.coerce(node, property, "@iri")
+                            }
+                        }
+                    } else {
+                        var prefix = property.split(":")[0];
+                        if(typeof(node[property]) === "object") {
+                            node[property].push(object);
+                        } else {
+                            var object = [ node[property], object];
+                            node[property] = object;
+                        }
+                    }
+                } else {
+                    node[property] = object;
+                    if(property[0] != '@') {
+                        if(isCURIE) {
+                            // saving prefix
+                            var prefix = property.split(":")[0];
+                            node["@context"][prefix] = rdf.prefixes[prefix];
+                        } else {
+                            // saving whole URI in context
+                            node["@context"][property] = triple.predicate.valueOf();
+                        }
+
+                        if(typeof(object) === 'string' &&
+                           (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
+                            sko.jsonld.coerce(node, property, "@iri")
+                        }
+                        
+                    }
+                }
+            });
+
+            var results = [];
+            for(var p in nodes) {
+                results.push(nodes[p]);
+            }
+
+            return results;
+        }
+};
+
+/**
+ * Manipulate prototypes for RDFS classes
+ */
+sko.Class = {};
+sko.Class.Clone = function() {};
+sko.Class.registry = {};
+sko.Class.define = function(classExpression, object) {
+    sko.Class.registry[sko.NTUri(classExpression.replace(/\s*/g,""))] = object;
+};
+
+sko.Class.instance = function() {
+    var classUri = sko.NTUri(arguments[0]);
+    var base = arguments[1] || {};
+
+    var classPrototype = sko.Class.registry[classUri];
+    sko.Class.Clone.prototype = classPrototype;
+    var clone = new sko.Class.Clone();
+
+    base.extended = null;
+
+    for(var p in clone) {
+        if(base[p] == null) {
+            base[p] = clone[p];
+        }
+    }
+    if(base.extended) {
+        base.extended();
+    }
+
+    return base;    
+};
+
+sko.Class.check = function(resource) {
+    //var newClasses = {};
+    var isFirstRun = arguments[1] || false;
+
+    for(var p in sko.Class.registry) {
+        sko.log("*** IS INSTANCE OF? "+p);
+        if(sko.Class.isInstance(resource, p)) {
+            sko.log("Y!");
+            if(isFirstRun || resource.classes[p] == null) {
+                sko.Class.instance(p,resource)
+            }
+            resource.classes[p] = true;
+        } else {
+            sko.log("N!");
+            if(resource.classes[p] != null) {
+                delete resource.classes[p];
+                for(var m in sko.Class.registry[p]) {
+                    // @todo 
+                    // check if it is an observer and 
+                    // then set the value to null
+                    delete resource[m];
+                }
+            }
+        }
+    }
+
+    //resource.classes = newClasses;
+};
+
+sko.Class.isInstance = function(resource, klass) {
+    if(klass.indexOf("ObjectIntersectionOf(") === 0) {
+        var parts = klass.slice(0,klass.length-1).split("ObjectIntersectionOf(")[1].split(",");
+        for(var i=0; i<parts.length; i++) {
+            sko.log("INTERSECTION CHECKING "+parts[i]);
+            if(!sko.Class.isInstance(resource, parts[i])) {
+                return false;
+            }
+        }
+        return true;
+    } else if(klass.indexOf("ObjectUnionOf(") === 0) {
+        var parts = klass.slice(0,klass.length-1).split("ObjectUnionOf(")[1].split(",");
+        for(var i=0; i<parts.length; i++) {
+            if(sko.Class.isInstance(resource, parts[i])) {
+                return true;
+            }
+        }
+        return false;
+    } else if(klass.indexOf("ObjectSomeValuesFrom(") === 0) {
+        var propertyUri = klass.slice(0,klass.length-1).split("ObjectSomeValuesFrom(")[1];
+        sko.log("CHECKIN CLASS URI: "+sko.NTUri(propertyUri));
+        for(var p in resource.valuesMap) {
+            sko.log(" - "+p+" ---> "+resource.valuesMap[sko.NTUri(propertyUri)]);
+        }
+        return resource.valuesMap[sko.NTUri(propertyUri)] != null
+    } else {
+        sko.log("CHECKIN CLASS URI: "+sko.NTUri(klass));
+        sko.log(resource);
+        for(var p in resource.classes) {
+            sko.log(" - "+p+" ---> "+resource.classes[p]);
+        }
+
+        return resource.classes[sko.NTUri(klass)] === true;
+    }
+};
+
+/**
+ * Starts the library. Call this before anything else.
+ */
+sko.ready = function()  {
+
+    // reset state
+    sko.aboutResourceMap = {};
+    sko.aboutResourceSubscriptionMap = {};
+    sko.Class.registry = {};
+    sko.aboutCounter = 0;
+    sko.generatorId = 0;
+    sko.generatorsMap = {};
+
+    var cb = null;
+    if(arguments.length === 2) {
+        sko.store = arguments[0];
+        cb = arguments[1];
+
+        sko.rdf = sko.store.rdf;
+
+        cb(true);
+    } else {
+        cb = arguments[0];
+        rdfstore.create(function(store) {
+            sko.store = store;
+	    sko.store.registerDefaultProfileNamespaces();
+            sko.rdf = sko.store.rdf;
+
+            cb(true);
+        });
+    }
+};
+
+sko.registerPrefix = function(prefix, uri) {
+    sko.store.registerDefaultNamespace(prefix, uri);
+};
+
+// blank IDs counter
+sko._blankCounter = 0;
+sko.nextBlankLabel = function () {
+    var blankLabel = "_:sko_" + sko._blankCounter;
+    sko._blankCounter++;
+    return blankLabel;
+};
+
+// Collection of observable resources
+sko.aboutResourceMap = {};
+sko.aboutResourceSubscriptionMap = {};
+
+sko.aboutCounter = 0;
+
+sko.about = function(aboutValue, viewModel, cb) {
+    var currentValue = sko.about[aboutValue];
+    if(currentValue != null) {
+        // returning an observable that was already registered for this node
+        cb(aboutValue);
+    } else {
+        // the about value hasn't been registered yet
+
+        // identifier
+        var nextId = ''+sko.aboutCounter;
+        sko.aboutCounter++;
+
+        // this is a blank node
+        if(aboutValue == null) {
+            aboutValue = sko.nextBlankLabel();
+        }
+
+        if(typeof(aboutValue) === 'string') {
+            // the value is aconstant URI
+
+            var uri = aboutValue;
+
+            // register the new observer and resource
+            sko.store.node(sko.plainUri(uri), function(success, resource) {
+                if(success) {
+                    sko.log("FOUND RESOURCE: "+uri);
+                    sko.log(resource);
+                    sko.log(" FOR "+sko.plainUri(uri));
+                    // id -> Resource
+                    sko.log(" ------------> "+nextId+" : "+uri);
+                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, uri,resource);
+                    // id -> observer
+                    sko.about[nextId] = ko.observable(uri);
+                    
+                    // we observe changes in the about resource
+                    var subscription = sko.about[nextId].subscribe(function(nextUri) {
+                        sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+
+                        if(nextUri == null) {
+                            sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                            nextUri = sko.nextBlankLabel();
+                        }
+
+                        sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
+                            if(success) {
+                                var newUri = nextResource.toArray()[0].subject.valueOf();
+                                sko.log(" ------------> "+nextId+" : "+newUri+" 2");
+                                sko.aboutResourceMap[nextId].about(newUri);
+                            } else {
+                                // reset resource?
+                                sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                sko.log(" ------------> "+nextId+" : "+nextUri+" 3");
+                                sko.aboutResourceMap[nextId].about(nextUri);
+                            }
+                        });
+                    });
+                    sko.aboutResourceSubscriptionMap[nextId] = subscription;
+                } else {
+                    // what here?
+                }
+
+                cb(nextId);
+            });
+        } else {
+            // The value is a function (maybe an observer)
+
+            sko.about[nextId] = ko.dependentObservable({
+                read: function(){
+                    var uri = aboutValue();
+                    sko.log("*** OBSERVABLE READING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+uri);
+
+                    if(uri == null) {
+                        sko.log(" ** URI IS BLANK -> GEN BLANK LABEL");
+                        uri = sko.nextBlankLabel();
+                    }
+
+                    return uri;
+                },
+                write: function(value) {
+                    sko.log("*** OBSERVABLE WRITING DEPENDING NODE ABOT ID:"+nextId+" new value -> "+value);
+                    if(value == null) {
+                        sko.log(" ** URI IS BLANK -> GEN BLANK LABEL");
+                        value = sko.nextBlankLabel();
+                    }
+
+                    aboutValue(value);
+                },
+                owner: viewModel 
+            });
+
+            // register the new observer and resource
+            sko.store.node(sko.plainUri(sko.about[nextId]()), function(success, resource) {
+                if(success) {
+                    // id -> Resource
+                    sko.log(" ------------> "+nextId+" : "+resource+" 4");
+                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, sko.about[nextId](), resource);
+                    
+                    // we observe changes in the about resource
+                    var subscription = sko.about[nextId].subscribe(function(nextUri) {
+                        sko.log("*** OBSERVING NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+                        if(nextUri != null) {
+                            sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
+                                if(success) {
+                                    if(nextResource.toArray().length>0) {
+                                        var newUri = nextResource.toArray()[0].subject.toNT();
+                                        sko.log(" ------------> "+nextId+" : "+newUri+" 5");
+                                        sko.aboutResourceMap[nextId].about(newUri);
+                                    } else {
+                                        // reset resource?
+                                        sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                                        sko.log(" ------------> "+nextId+" : "+nextUri+" 6");
+                                        sko.aboutResourceMap[nextId].about(nextUri);
+                                    }
+                                } else {
+                                    sko.log("Error updating 3 resource for URI:"+nextUri+" in SKO about node observer");
+                                    sko.log("*** NO RESOURCE FOR URI:"+nextUri + " NEXT ID:"+nextId);
+                                    sko.log(" ------------> "+nextId+" : "+nextUri+" 7");
+                                    sko.aboutResourceMap[nextId].about(nextUri);
+                                }
+                            });
+                        } else {
+                            sko.log("*** NO RESOURCE FOR URI:"+nextUri);
+                            sko.log(" ------------> "+nextId+" : NEW BLANK  8");
+                            sko.aboutResourceMap[nextId].about(sko.nextBlankLabel());
+                        }
+                    });
+                    sko.aboutResourceSubscriptionMap[nextId] = subscription;
+                } else {
+                    // what here?
+                }
+                cb(nextId);
+            });
+        }
+    }
+};
+
+sko.rel = function(relValue, node, viewModel, cb) {
+    var nextId = ''+sko.aboutCounter;
+
+    var relValueUri = null;
+    sko.aboutCounter++;
+
+    if(typeof(relValue) === 'string') {
+        var uri = sko.NTUri(relValue);
+        relValueUri = uri;
+        
+        sko.about[nextId] = ko.dependentObservable({
+            read: function(){
+                sko.log("*** OBSERVABLE READING RELATED  DEPENDING NODE ABOT ID:"+nextId);
+                var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
+                sko.log(resource);                
+                if(resource != null) {
+                    sko.log(" ** about:"+resource.about());
+                    sko.log("*** Found parent resource: "+resource.about());
+
+                    if(resource[uri]) {
+                        var relResourceUri = resource[uri]();
+                        if(relResourceUri != null && !sko.isSKOBlankNode(resource[uri]())) {
+                            relResourceUri = sko.NTUri(relResourceUri);
+                            if(sko.aboutResourceMap[nextId] == null || sko.aboutResourceMap[nextId].about() != relResourceUri) {
+                                sko.log("*** found related resource: "+relResourceUri);
+                                // register the new observer and resource
+                                sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
+                                    sko.log("CREATED NODE FOR ID "+nextId+" AND URI: "+sko.plainUri(relResourceUri));
+                                    sko.log(resource);
+                                    sko.log(" ------------> "+nextId+" : "+relResourceUri+" 8b");
+                                    sko.aboutResourceMap[nextId] = new sko.Resource(nextId, relResourceUri, resource);
+                                });
+                            } else {
+                                sko.log("*** Related resource hasn't changed");
+                            }
+                            
+                            return relResourceUri;
+                        } else {
+                            if(relResourceUri == null) {
+                                sko.log("*** related resource is null");
+
+                                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                                var nextUri = sko.nextBlankLabel();
+                                
+                                sko.log(" ** setting parent node related resource to "+nextUri);
+                                resource[uri](nextUri);
+                            } else {
+                                if(sko.aboutResourceMap[nextId]) {
+                                    // @todo here
+                                    sko.log("*** setting new value for related resource "+nextUri);
+                                    sko.log(" ------------> "+nextId+" : "+nextUri+" 9");
+                                    sko.aboutResourceMap[nextId].about(nextUri);
+                                } else {
+                                    // what here?
+                                    sko.log("!! Should I create the new blank node?");
+                                }
+                            }
+                            return nextUri;
+                        }
+                    } else {
+                        sko.log("!!! parent resource doest not link to the related resource");                    
+                    }
+                } else {
+                    sko.log("!!! impossible to find parent resource");
+                }},
+
+            // we setup the related object of the parent resource
+            // this will trigger the observer that will update this model proxy
+            write: function(uri) {
+
+                if(uri == null) {
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    uri = sko.nextBlankLabel();
+                }
+
+                uri = sko.NTUri(uri);
+
+                sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+                var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
+
+                if(resource != null) {
+                    sko.log("*** Found parent resource: "+resource.about());
+                    if(resource[relValueUri]) {
+                        sko.log("*** Setting new related resource in parent resource found: "+uri);                    
+                        resource[relValueUri](uri);
+                    } else {
+                        sko.log("!!! parent resource doest not link to the related resource");                    
+                    }
+                } else {
+                    sko.log("!!! impossible to find parent resource");
+                }                
+            },
+
+            owner: viewModel
+        });
+
+        var subscription = sko.about[nextId].subscribe(function(nextUri) {
+            sko.log("*** OBSERVING RELATED NODE ABOT ID:"+nextId+" new value -> "+nextUri);
+            if(nextUri == null) {
+                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                nextUri = sko.nextBlankLabel();
+            }
+
+            nextUri = sko.NTUri(nextUri);
+
+            if(sko.about[nextId]() != null) {
+                if(sko.plainUri(nextUri) !== sko.plainUri(sko.about[nextId]())) {
+                    sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
+                        if(success) {
+                            var newUri = nextResource.toArray()[0].subject.valueOf();
+                            sko.log(" ------------> "+nextId+" : "+uri+" 10");
+                            sko.aboutResourceMap[nextId].about(uri);
+                        } else {
+                            sko.log("Error updating 1 resource for URI:"+nextUri+" in SKO about related node observer");
+                        }
+                    });
+                }
+            } else {
+                // @todo
+                sko.log("!! this resource is now null, should be removed from list of resources?");
+            }
+        });
+        sko.aboutResourceSubscriptionMap[nextId] = subscription;
+    } else {
+        sko.about[nextId] = ko.dependentObservable({
+            read: function(){
+                var uri;
+
+                if(relValue != null) {
+		    uri = relValue();
+                    uri = sko.NTUri(uri);
+                    sko.log("*** OBSERVABLE READING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+		} else {
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    uri = sko.nextBlankLabel();
+                }
+                
+                var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
+                if(resource != null) {
+                    sko.log("*** Found parent resource: "+resource.about());
+                    if(resource[uri]) {
+                        var relResourceUri = resource[uri]();
+                        
+                        sko.log("*** found related resource: "+relResourceUri);
+                        // register the new observer and resource
+                        sko.store.node(sko.plainUri(relResourceUri), function(success, resource) {
+                            sko.log(" ------------> "+nextId+" : "+relResourceUri+" 11");
+                            sko.aboutResourceMap[nextId] = new sko.Resource(nextId, relResourceUri, resource);
+                        });
+
+                        return relResourceUri;
+                    } else {
+                        sko.log("!!! parent resource doest not link to the related resource");                    
+                    }
+                } else {
+                    sko.log("!!! impossible to find parent resource");
+                }
+            },
+
+            // we setup the related object of the parent resource
+            // this will trigger the observer that will update this model proxy
+            write: function(uri) {
+                uri = sko.NTUri(uri);
+                var resource  = sko.currentResource(jQuery(node).parent().toArray()[0]);
+
+                sko.log("*** OBSERVABLE WRITING RELATED DEPENDING NODE ABOT ID:"+nextId+" URI -> "+uri);
+
+                if(uri == null) {
+                    sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                    uri = sko.nextBlankLabel();
+                }
+
+                if(resource != null) {
+                    sko.log("*** Found parent resource: "+resource.about());
+                    if(resource[relValue()]) {
+                        sko.log("*** Setting new related resource in parent resource found: "+uri);                    
+                        resource[relValue()](uri);
+                        relValue(uri);
+                    } else {
+                        sko.log("!!! parent resource doest not link to the related resource");                    
+                    }
+                } else {
+                    sko.log("!!! impossible to find parent resource");
+                }                
+            },
+
+            owner: viewModel
+        });
+
+        var subscription = sko.about[nextId].subscribe(function(nextUri) {
+            nextUri = sko.NTUri(nextUri);
+            sko.log("*** OBSERVING RELATED NODE (F) ABOT ID:"+nextId+" new value -> "+nextUri);
+
+            if(nextUri == null) {
+                sko.log(" ** NEXT URI IS NULL, GEN BLANK LABEL");
+                nextUri = sko.nextBlankLabel();
+            }
+
+            if(sko.plainUri(nextUri) != sko.plainUri(sko.about[nextId]())) {
+                sko.store.node(sko.plainUri(nextUri), function(success, nextResource) {
+                    if(success) {
+                        var newUri = nextResource.toArray()[0].subject.valueOf();
+                        sko.log(" ------------> "+nextId+" : "+newUri+" 12");
+                        sko.aboutResourceMap[nextId].about(newUri);
+                    } else {
+                        sko.log("Error updating  2 resource for URI:"+nextUri+" in SKO about related node observer");
+                    }
+                });
+            } else {
+                sko.log("*** Related about resource hasn't changed");
+            }
+        });
+        sko.aboutResourceSubscriptionMap[nextId] = subscription;
+    }
+
+    cb(nextId);
+};
+
+sko.plainUri = function(uri) {
+    if(uri[0] === "<" && uri[uri.length-1] == ">") {
+        return uri.slice(1,uri.length-1);
+    } else if(uri.match(/\[[^,;"\]\}\{\[\.:]+:[^,;"\}\]\{\[\.:]+\]/) != null) {
+        uri = uri.slice(1, uri.length-1);
+        var resolved = sko.rdf.prefixes.resolve(uri);
+        if(resolved == null) {
+            throw("The CURIE "+uri+" cannot be resolved");
+        } else {
+            return resolved;
+        }
+    } else {
+        return uri;
+    }
+};
+
+sko.effectiveValue = function(term) {
+    if(term == null) {
+        return null;
+    } else {
+        if(term.interfaceName && term.interfaceName === 'Literal') {
+            if(term.datatype == "http://www.w3.org/2001/XMLSchema#integer" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#decimal" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#double" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#long" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#int" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#short" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#byte" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+               term.datatype == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+                return parseFloat(term.valueOf());
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
+                return (term.valueOf() === 'true' || term.valueOf() === true || term.valueOf() === 'True');
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
+                return term.valueOf();
+            } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
+                return new Date(term.valueOf());
+            } else if(term.type == null) {
+                return term.valueOf();
+            }
+        } else {
+            return term.valueOf();
+        }
+    }
+};
+
+sko.defaultLanguage = ko.observable(null);
+
+sko.Resource = function(resourceId, subject, node) {
+    this.resourceId = resourceId;
+    this.valuesMap = {};
+    this.subscriptions = [];
+    this.literalLangs = {};
+
+    // classes this object is instance of
+    this.classes = {};
+
+    var that = this;
+    
+    // default language for literals
+    this.defaultLanguage = ko.dependentObservable(function(){
+        return sko.defaultLanguage();
+    });
+
+    subject = sko.NTUri(subject);
+
+    
+
+    node.forEach(function(triple){
+        sko.log(triple);
+        if(triple.predicate.toNT() === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>") {
+            sko.log(" found resource class "+triple.object.toNT());
+            that.classes[triple.object.toNT()] = true;
+        }
+
+        if(triple.object.interfaceName === 'NamedNode') {
+            that.valuesMap[triple.predicate.toNT()] = triple.object.toNT();
+            that[triple.predicate.toNT()] = ko.observable(triple.object.toNT());
+        } else if(triple.object.interfaceName === 'Literal') {
+            if(that.defaultLanguage() != null) {
+                if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == that.defaultLanguage()) {
+                    var effectiveValue = sko.effectiveValue(triple.object.valueOf());
+                    that.valuesMap[triple.predicate.toNT()] = effectiveValue;
+                    that[triple.predicate.toNT()] = ko.observable(effectiveValue);
+                    that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+                    that.literalLangs[triple.predicate.toNT()] = triple.object.language;
+                }
+            } else {
+                if(that.valuesMap[triple.predicate.toNT()] == null || triple.object.language == null) {
+                    var effectiveValue = sko.effectiveValue(triple.object.valueOf());
+                    that.valuesMap[triple.predicate.toNT()] = effectiveValue;
+                    that[triple.predicate.toNT()] = ko.observable(effectiveValue);
+                    that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+                    that.literalLangs[triple.predicate.toNT()] = triple.object.language;
+                }
+            }
+        } else {
+            that.valuesMap[triple.predicate.toNT()] = triple.object.valueOf();
+            that[triple.predicate.toNT()] = ko.observable(triple.object.valueOf());
+            that[sko.plainUri(triple.predicate.toNT())] = that[triple.predicate.toNT()];
+        }
+    });
+    this.about = ko.observable(subject);
+    this['@'] = this.about;
+    this.storeObserverFn = sko.Resource.storeObserver(this);
+
+    // setup classes
+    sko.Class.check(this, true);
+
+    // observe changes in the subject of this resource
+    var that = this;
+    var subscription = this.about.subscribe(function(newUri){
+        sko.log("SKO Resource new resource:"+newUri);
+
+        sko.log("*** STOP OBSERVING NODE STORE");
+        sko.store.stopObservingNode(that.storeObserverFn);
+
+        if(newUri != null && newUri.indexOf("_:sko")!=0) {
+            sko.log("*** START OBSERVING NODE STORE FOR "+that.about());
+            sko.store.startObservingNode(sko.plainUri(newUri), that.storeObserverFn);
+        } else {
+            sko.log("*** nullifying resources");
+
+            // set properties to null
+            for(var p in that.valuesMap) {
+                that.valuesMap[p] = null;                
+            }
+            for(var p in that.valuesMap) {
+                that[p](null);
+            }
+        }
+    });
+
+    this.subscriptions.push(subscription);
+
+    
+    // observe notifications from KO and the RDF store
+    sko.Resource.koObserver(this);
+    sko.store.startObservingNode(sko.plainUri(this.about()), that.storeObserverFn);
+};
+
+
+sko.NTUri = function(uri) {
+    if(uri[0]==="[" && uri[uri.length-1]==="]") {
+        uri = uri.slice(1, uri.length-1);
+        resolved = sko.rdf.prefixes.resolve(uri);
+        if(uri == null) {
+            throw("The CURIE "+uri+" cannot be resolved");
+        } else {
+            uri = "<"+resolved+">";
+        }
+    }
+
+    return uri;
+};
+
+/**
+ * helper method for bound accessors
+ */
+sko.Resource.prototype.tryProperty = function(property)  {
+
+    property = sko.NTUri(property);
+
+    if(this[property]!=null) {
+        return this[property];
+    } else {
+
+        this.valuesMap[property] = null;
+        this[property] = ko.observable(null);
+        var that = this;
+        var observerFn = function(newValue){
+            that.notifyPropertyChange(property,newValue);
+        };
+        var subscription = this[property].subscribe(observerFn);
+        this.subscriptions.push(subscription);
+        return this[property];
+    }
+};
+
+sko.Resource.prototype.prop = function (property) {
+    return this.tryProperty(property);
+};
+
+sko.Resource.prototype.getProp = function (property) {
+    return this.tryProperty(property)();
+};
+
+sko.Resource.prototype.setProp = function (property, newValue) {
+    return this.tryProperty(property)(newValue);
+};
+
+
+/**
+ * Must update the value in the RDFstore
+ */
+sko.Resource.prototype.notifyPropertyChange = function(property, newValue) {
+    sko.log("*** received KO notification for property "+property+" -> "+newValue);
+    if(this.valuesMap[property] == null) {
+        // property is not defined -> create
+        // if it is a blank ID don't do anything
+        this.valuesMap[property] = newValue;
+        var isBlank = this.about().indexOf("_:sko") === 0;
+        if(!isBlank) {
+            if(newValue != null) {
+                if(newValue.indexOf("http") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' <'+newValue+'> }', function(){});
+                } else if(newValue.indexOf("<") === 0) {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' '+newValue+' }', function(){});
+                } else {
+                    sko.store.execute('INSERT DATA { '+this.about()+' '+property+' "'+newValue+'" }', function(){});  
+                }
+            }
+        }
+    } else {
+        if(this.valuesMap[property] !== newValue && !sko.isSKOBlankNode(newValue)) {
+            // property is already present and the value has changed -> update
+            var oldValue = '"'+this.valuesMap[property]+'"';
+            newValue = '"'+newValue+'"';
+
+            if(this.literalLangs[property] != null) {
+                oldValue = oldValue+"@"+this.literalLangs[property];
+                newValue = newValue+"@"+this.literalLangs[property];                
+            }
+
+            //@todo something must be done with datatypes and literals
+            var query = "DELETE { "+this.about()+" "+property+" "+oldValue+" }";
+            query = query + " INSERT { "+this.about()+" "+property+" "+newValue+" }";
+            query = query + " WHERE { "+this.about()+" "+property+" "+oldValue+" }"; 
+
+            query = query.replace(/"</g,"<").replace(/>"/g,">");
+
+            this.valuesMap[property] = newValue;
+            sko.log("*** updating STORE: \n  "+query);
+            sko.store.execute(query);
+        }
+    }
+};
+
+sko.isSKOBlankNode = function (term) {
+    return term.indexOf("_:sko") === 0;
+};
+
+sko.Resource.prototype.disconnect = function() {
+    sko.log(" ** DISCONNECTING");
+    sko.store.stopObservingNode(this.storeObserverFn);
+    sko.log(" ** disconnected STORE");
+    for(var i=0; i<this.subscriptions.length; i++) {
+        sko.log(" ** disconnecting subscription");
+        this.subscriptions[i].dispose();
+    }
+
+    sko.log(" ** disconnecting resource map");
+    sko.aboutResourceSubscriptionMap[this.resourceId].dispose();
+    sko.log(" ** deleting");
+    delete sko.aboutResourceMap[this.resourceId];
+    delete sko.about[this.resourceId];
+};
+
+sko.cleanNode = function (node) {
+    sko.log("*** CLEANING!");
+    sko.log(node);
+    var thisId = jQuery(node).attr("aboutId");
+    var ids = [];
+    if (thisId != null) {
+        ids.push(thisId);
+    }
+    ids = ids.concat(sko.childrenResourceIds(node));
+    for (var i = 0; i < ids.length; i++) {
+        if (sko.aboutResourceMap[ids[i]] != null) {
+            sko.log("*** DISCONNECTING " + ids[i]);
+            sko.log(sko.aboutResourceMap[ids[i]]);
+            sko.aboutResourceMap[ids[i]].disconnect();
+        }
+    }
+};
+
+sko.Resource.koObserver = function(skoResource) {
+    var that = this;
+    var makeResourceObserver = function(resource,property) {
+        sko.log("*** subcribing to property "+property);
+        var subscription = resource[property].subscribe(function(value){
+            resource.notifyPropertyChange(property,value);
+        });
+        resource.subscriptions.push(subscription);
+    };
+
+    for(var p in skoResource.valuesMap) {
+        makeResourceObserver(skoResource,p);
+    }
+};
+
+sko.Resource.storeObserver = function(skoResource) {
+    return function(node)  {
+        sko.log("*** received notification change from STORE in resource "+skoResource.about());
+        if(skoResource.about().indexOf("_:sko")===0) {
+            return;
+        }
+        var newValues = {};
+        var newValuesLangs = {};
+
+        sko.log("*** triples in STORE resource -> "+node.toArray().length);
+
+        node.forEach(function(triple){
+            if(triple.object.interfaceName === 'NamedNode') {
+                sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.toNT());
+
+		if(newValues[triple.predicate.toNT()] != null) {
+		    if(newValues[triple.predicate.toNT()].constructor === Array) {
+			// more than one, added to array.
+			// @todo what if named nodes and literals are mixed?
+			newValues[triple.predicate.toNT()].push(triple.object.toNT());
+			newValues[triple.predicate.toNT()].sort();
+		    } else {
+			newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.toNT()];
+		    }
+		    
+		} else {
+                    newValues[triple.predicate.toNT()] = triple.object.toNT();
+		}
+            } else {
+                if(skoResource.defaultLanguage() != null) {
+                    if(newValues[triple.predicate.toNT()] == null || triple.object.language == skoResource.defaultLanguage()) {
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// The value in the array cannot have a null lang
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != triple.object.language) {
+				    // replace old value (no lang) by a new value with lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+			    }
+			} else {
+			    // set up a default value, with null or correct lang
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
+                    }
+                } else {
+		    if(newValues[triple.predicate.toNT()] == null || triple.object.language == null) {
+			if(newValues[triple.predicate.toNT()] != null) {
+			    if(newValues[triple.predicate.toNT()].constructor === Array) {
+				// more than one, added to array.
+				// @todo what if named nodes and literals are mixed?
+				newValues[triple.predicate.toNT()].push(triple.object.valueOf());
+				newValues[triple.predicate.toNT()].sort();
+			    } else {
+				if(newValuesLangs[triple.predicate.toNT()] != null) {
+				    // replace old value (with lang) by a new value with no lang
+				    newValues[triple.predicate.toNT()] = triple.object.valueOf();
+				    newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+				} else {
+				    // last value was a single value with the correct lang -> now is an array
+				    newValues[triple.predicate.toNT()] = [newValues[triple.predicate.toNT()], triple.object.valueOf()];				    
+				}
+				
+			    }
+			} else {
+                            sko.log(" "+triple.predicate.toNT()+" -> "+triple.object.valueOf());
+                            newValues[triple.predicate.toNT()] = triple.object.valueOf();
+                            newValuesLangs[triple.predicate.toNT()] = triple.object.language;
+			}
+                    }             
+                }
+            }
+        });
+
+        var newValueMap = {};
+        var toNullify = [];
+        var toUpdate = [];
+        var toCreate = [];
+
+        // what has changed?, what need to be removed?
+        for(var p in skoResource.valuesMap) {
+            if(newValues[p] != null) {
+                newValueMap[p] = newValues[p];
+		if(skoResource.valuesMap[p] &&
+		   skoResource.valuesMap[p].constructor === Array &&
+		   newValues[p].constructor === Array) {
+		    if(skoResource.valuesMap[p].length != newValues[p].length) {
+			// @todo check also the individual URIS
+			toUpdate.push(p);
+		    }
+		} else {
+                    if(skoResource.valuesMap[p] !== newValues[p]) {
+			toUpdate.push(p);
+			if(newValuesLangs[p] != null || skoResource.literalLangs[p] != null) {
+                            skoResource.literalLangs[p] = newValuesLangs[p];
+			}
+                    }
+		}
+            } else {
+                toNullify.push(p);
+                delete skoResource.literalLangs[p];
+            }
+        }
+
+        // what is new?
+        for(var p in newValues) {
+            if(skoResource.valuesMap[p] == null) {
+                toCreate.push(p);
+                newValueMap[p] = newValues[p];
+                skoResource.literalLangs[p] = newValuesLangs[p];
+            }
+        }
+
+        // updateValues
+        skoResource.valuesMap = newValueMap;
+
+        for(var i=0; i<toNullify.length; i++) {
+            sko.log("*** setting value to null "+toNullify[i]+" -> NULL");
+            skoResource[toNullify[i]](null);
+        }
+
+        for(var i=0; i<toUpdate.length; i++) {
+            sko.log("*** updating value "+toUpdate[i]+" -> "+skoResource.valuesMap[toUpdate[i]]);
+            skoResource[toUpdate[i]](skoResource.valuesMap[toUpdate[i]]);
+        }
+
+        for(var i=0; i<toCreate.length; i++) {
+            sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
+	    if(skoResource[toCreate[i]]!=null){
+		skoResource[toCreate[i]](skoResource.valuesMap[toCreate[i]]);
+	    } else {
+		skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
+	    }
+	    skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
+        }
+        
+        // setup classes
+        sko.Class.check(skoResource);
+
+        sko.log("*** END MODIFICATION");
+    };    
+};
+
+// custom bindings
+
+//ko.bindingHandlers.about = {
+//    init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+//        // This will be called when the binding is first applied to an element
+//        // Set up any initial state, event handlers, etc. here
+// 
+//        var value = valueAccessor();
+//        $(element).attr("about", value);
+//    },
+//    
+//    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+//        // This will be called once when the binding is first applied to an element,
+//        // and again whenever the associated observable changes value.
+//        // Update the DOM element based on the supplied values here.
+// 
+//        var value = valueAccessor();
+//        $(element).attr("about", value);
+//    }
+//};
+
+
+// trace resources
+sko.traceResources = function(rootNode, model, cb) {
+    sko.log("** TRACING:");
+    sko.log(rootNode);
+    var nodes = [];
+    if(jQuery(rootNode).attr("about") || jQuery(rootNode).attr("data-bind")) {
+        nodes.push(rootNode);
+    }
+    var childNodes = jQuery(rootNode).find("*[about], *[data-bind]").toArray();
+    nodes = nodes.concat(childNodes);
+    var registerFn = function(k,env){
+        var node = nodes[env._i];
+        var about = jQuery(node).attr("about");
+        var aboutId = jQuery(node).attr("aboutId");
+        if(aboutId == null) {
+            var databind;
+
+            if(about == null) {
+                var dataBind = jQuery(node).attr("data-bind");
+                if(dataBind != null) {
+                    if(dataBind.indexOf("about:") != -1) {
+                        var re = new RegExp("\s*([^ ]+)\s*,?");
+                        about = re.exec(dataBind.split("about:")[1])[0];
+                        if(about[about.length-1] === ',') {
+                            about = about.slice(0,about.length-1);
+                        }
+                    }
+                }
+            }
+
+            if(about != null && about != '') {
+                if(typeof(about) === 'string' && about[0] !== '<' && about[about.length-1] !== '>' && about[0] !== '[' && about[about.length-1] !== ']') {
+                    about = model[about];
+                }
+                
+                sko.about(about, model, function(aboutId) {
+                    jQuery(node).attr('aboutId',aboutId);
+                    k(registerFn,env);
+                });
+            } else {
+                k(registerFn, env);
+            }
+        } else {
+            k(registerFn, env);
+        }
+    };
+
+    Utils.repeat(0,nodes.length, registerFn, function(env) {
+        cb();
+    });
+};
+
+/**
+ * This function must be called *after* traceResources has been
+ * invoked.
+ */
+sko.currentResource = function(node) {
+    sko.log("in current resource");
+    sko.log(node);
+    if(node == null) {
+        sko.log("!!! top of DOM tree, About node not found");
+        return null;
+    }
+    var aboutId = jQuery(node).attr('aboutId');
+    sko.log("about id:"+aboutId);
+
+    if(aboutId) {
+        var uri = sko.about[aboutId]();
+        sko.log("uri:"+uri);
+        if(uri != null) {
+            return sko.aboutResourceMap[aboutId];
+        } else {
+            sko.log("!!! current resource is null: "+aboutId);
+        }
+    } else {
+        sko.log("recurring");
+        return sko.currentResource(jQuery(node).parent().toArray()[0]);
+    }
+};
+
+sko.currentResourceNode = function(node) {
+    sko.log("in current resource node");
+    sko.log(node);
+    if(node == null) {
+        sko.log("!!! top of DOM tree, About node not found");
+        return null;
+    }
+    var aboutId = jQuery(node).attr('aboutId');
+    sko.log("about id:"+aboutId);
+
+    if(aboutId) {
+        var uri = sko.about[aboutId]();
+        sko.log("uri:"+uri);
+        if(uri != null) {
+            return node;
+        } else {
+            sko.log("!!! current resource is null: "+aboutId);
+            return null;
+        }
+    } else {
+        sko.log("recurring");
+        return sko.currentResourceNode(jQuery(node).parent().toArray()[0]);
+    }
+};
+
+sko.childrenResourceIds = function(node) {
+    return jQuery(node).find("*[aboutId]").map(function(){ return jQuery(this).attr("aboutId") });
+};
+
+sko.traceRelations = function(rootNode, model, cb) {
+    sko.log("*** TRACING RELATIONS:");
+    rootNode = (sko.currentResourceNode(rootNode) || rootNode);
+    sko.log("*** FOUND ROOT NODE TO LOOK FOR RELATIONS:");
+    sko.log(rootNode);
+
+    var nodes = [];
+    if(jQuery(rootNode).attr("rel") || jQuery(rootNode).attr("data-bind")) {
+        nodes.push(rootNode);
+    }
+    var childNodes = jQuery(rootNode).find("*[rel], *[data-bind]").toArray();
+    nodes = nodes.concat(childNodes);
+    sko.log(" ** NODES TO LOOK FOR RELATED RESOURCES");
+    sko.log(nodes);
+
+    var registerFn = function(k,env){
+        var node = nodes[env._i];
+        var rel = jQuery(node).attr("rel");
+        var databind;
+
+        if(rel == null) {
+            var dataBind = jQuery(node).attr("data-bind");
+            if(dataBind != null) {
+                if(dataBind.indexOf("rel:") != -1) {
+                    var re = new RegExp("\s*([^ ]+)\s*,?");
+                    rel = re.exec(dataBind.split("rel:")[1])[0];
+                    if(rel[rel.length-1] === ',') {
+                        rel = rel.slice(0,rel.length-1);
+                    }
+                }
+            }
+        }
+
+        if(rel != null && rel != '') {
+            if(typeof(rel) === 'string' && rel[0] !== '<' && rel[rel.length-1] !== '>' && rel[0] !== '[' && rel[rel.length-1] !== ']') {
+                rel = model[rel];
+            }
+            
+            var nextId = jQuery(node).attr("aboutId");
+            if(nextId == null) {
+                sko.log("*** CREATING RELATED NODE");
+                sko.rel(rel, node, model, function(aboutId) {
+                    jQuery(node).attr('aboutId',aboutId);
+                    k(registerFn,env);
+                });
+            } else {
+                sko.log("*** NODE IS ALREADY TRACED");
+                k(registerFn,env);
+            }
+        } else {
+            k(registerFn, env);
+        }
+
+        
+    };
+
+    Utils.repeat(0,nodes.length, registerFn, function(env) {
+        cb();
+    });
+};
+
+
+
+sko.generatorId = 0;
+sko.generatorsMap = {};
+
+sko.where = function (query) {
+    query = "select ?subject where " + query;
+    var nextId = '' + sko.generatorId;
+    sko.generatorId++;
+
+    sko.generatorsMap[nextId] = ko.observable([]);
+
+    sko.log("*** WHERE QUERY: " + query);
+    sko.store.startObservingQuery(query, function (bindingsList) {
+        var acum = [];
+        sko.log(" ** RESULTS!!!");
+
+        for (var i = 0; i < bindingsList.length; i++) {
+            sko.log(" ** ADDING VALUE " + bindingsList[i].subject.value);
+            acum.push("<" + bindingsList[i].subject.value + ">");
+        }
+
+        sko.log("** SETTING VALUE");
+        sko.log(acum);
+        sko.generatorsMap[nextId](acum)
+    });
+
+    return sko.generatorsMap[nextId];
+};
+
+/**
+ * Applies bindings and RDF nodes to the DOM tree
+ */
+sko.applyBindings = function(node, viewModel, cb) {
+    if(typeof(node) === 'string') {
+        node = jQuery(node)[0];
+    }
+    
+    sko.traceResources(node, viewModel, function(){
+        sko.traceRelations(node, viewModel, function(){
+            ko.applyBindings(viewModel, node);
+            if(cb != null) {
+                cb();
+            }
+        });
+    });
+};
+
+/**
+ * Retrieves the resource object active for a node
+ */
+sko.resource = function (jqueryPath) {
+    var nodes = jQuery(jqueryPath).toArray();
+    if (nodes.length === 1) {
+        return sko.currentResource(nodes[0]);
+    } else {
+        var acum = [];
+        for (var i = 0; i < nodes.length; i++) {
+            acum.push(sko.currentResource(nodes[i]));
+        }
+        return acum;
+    }
+};
+
+// place holder for the parser
+sko.owl = {};
 })(window);
