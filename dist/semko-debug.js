@@ -3531,8 +3531,12 @@ sko.Resource.storeObserver = function(skoResource) {
 
         for(var i=0; i<toCreate.length; i++) {
             sko.log("*** new value "+toCreate[i]+" -> "+skoResource.valuesMap[toCreate[i]]);
-            skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
-            skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
+	    if(skoResource[toCreate[i]]!=null){
+		skoResource[toCreate[i]](skoResource.valuesMap[toCreate[i]]);
+	    } else {
+		skoResource[toCreate[i]] =  ko.observable(skoResource.valuesMap[toCreate[i]]);
+	    }
+	    skoResource[sko.plainUri(toCreate[i])] = skoResource[toCreate[i]];
         }
         
         // setup classes
