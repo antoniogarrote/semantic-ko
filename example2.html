@@ -19,8 +19,8 @@
   <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
   <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js'></script>
   <script type='text/javascript' src='http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js'></script>
-  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/rdf_store_min.js'></script>
-  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/semantic-ko/semantic/dist/semko.js'></script>
+  <script type='text/javascript' src='./js/rdf_store_min.js'></script>
+  <script type='text/javascript' src='./js/semko.js'></script>
   <script type='text/javascript' src='./js/bootstrap-modal.js'></script>
   <script type='text/javascript' src='./js/bootstrap-tabs.js'></script>
   <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
@@ -95,8 +95,8 @@
 		sko.ready(function() {
 		    var data = window.dataEditor.getValue();
 		    var json = JSON.parse(data);
-		    sko.store.load("application/json", json, function(success, loaded) {
-			if(success) {
+		    sko.store.load("application/json", json, function(err, loaded) {
+			if(!err) {
 			    var code = window.viewModelEditor.getValue();
 			    eval(code);
 			    jQuery('#sparql-button').removeAttr('disabled');
